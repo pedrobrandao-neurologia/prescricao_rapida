@@ -135,12 +135,14 @@
             EIXO: {
                 name: 'EIXO Neurologia Especializada',
                 phone: '(61) 99124-6115',
-                address: 'SGAS 610, Bloco 02, Salas 136 a 138\nCentro Médico Lúcio Costa – Plano Piloto\nBrasília – DF\nCEP 70200-700'
+                address: 'SGAS 610, Bloco 02, Salas 136 a 138\nCentro Médico Lúcio Costa – Plano Piloto\nBrasília – DF\nCEP 70200-700',
+                logo: 'eixo_logo.png'
             },
             NA: {
                 name: 'NA Neurologistas Associados',
                 phone: '(61) 3242-3060',
-                address: 'Centro Médico Júlio Adnet - SEPS 709/909 Bloco B, Sala 12\nAsa Sul, Brasília - DF\nCEP 70390-095'
+                address: 'Centro Médico Júlio Adnet - SEPS 709/909 Bloco B, Sala 12\nAsa Sul, Brasília - DF\nCEP 70390-095',
+                logo: 'na_logo.png'
             }
         };
 
@@ -163,11 +165,21 @@
                     <div>
                         {/* Cabeçalho */}
                         <div style={{ textAlign: 'center', borderBottom: '2px solid #0d9488', paddingBottom: '16px', marginBottom: '32px' }}>
-                            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>{doctor.name}</h1>
-                            <p style={{ fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>{doctor.specialty} | {doctor.crm}</p>
-                            <p style={{ fontSize: '12px', color: '#1f2937', marginTop: '8px', fontWeight: 'bold' }}>{clinic.name}</p>
-                            <p style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'pre-line', marginTop: '4px' }}>{clinic.address}</p>
-                            <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Tel: {clinic.phone}</p>
+                            {clinic.logo ? (
+                                <React.Fragment>
+                                    <img src={clinic.logo} alt={clinic.name} style={{ maxHeight: '100px', margin: '0 auto 12px auto', display: 'block' }} />
+                                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>{doctor.name}</h1>
+                                    <p style={{ fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>{doctor.specialty} | {doctor.crm}</p>
+                                </React.Fragment>
+                            ) : (
+                                <React.Fragment>
+                                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>{doctor.name}</h1>
+                                    <p style={{ fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>{doctor.specialty} | {doctor.crm}</p>
+                                    <p style={{ fontSize: '12px', color: '#1f2937', marginTop: '8px', fontWeight: 'bold' }}>{clinic.name}</p>
+                                    <p style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'pre-line', marginTop: '4px' }}>{clinic.address}</p>
+                                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Tel: {clinic.phone}</p>
+                                </React.Fragment>
+                            )}
                         </div>
 
                         {/* Título da Receita */}
