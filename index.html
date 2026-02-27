@@ -19,16 +19,29 @@
                             500: '#14b8a6',
                             600: '#0d9488',
                             700: '#0f766e',
+                        },
+                        apple: {
+                            bg: '#f5f5f7',
+                            card: '#fbfbfd',
+                            text: '#1d1d1f',
+                            secondary: '#6e6e73',
+                            blue: '#0071e3',
+                            bluehover: '#0077ed',
+                            border: '#d2d2d7',
                         }
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        '2xl': '18px',
+                        '3xl': '22px',
                     }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- System font stack (Apple SF Pro) - no external font needed -->
 
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -38,10 +51,49 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Apple glass effect */
+        .apple-glass {
+            background-color: rgba(255, 255, 255, 0.72);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+
+        /* Smooth inputs */
+        input, select, textarea {
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #0071e3 !important;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15) !important;
+        }
+
+        /* Apple button style */
+        .apple-btn {
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 980px;
+            padding: 12px 24px;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+        .apple-btn:hover { background: #0077ed; }
+        .apple-btn:active { transform: scale(0.98); }
+        .apple-btn:disabled { background: #d2d2d7; cursor: not-allowed; }
 
         /* ===== ESTILOS DE IMPRESSÃO ===== */
         @media print {
@@ -54,11 +106,9 @@
                 margin: 0;
                 padding: 0;
             }
-            /* Esconde toda a interface de controle e o preview */
             .no-print {
                 display: none !important;
             }
-            /* Mostra apenas a área de impressão */
             .print-area {
                 display: block !important;
                 position: static !important;
@@ -78,13 +128,11 @@
                 flex-direction: column;
                 justify-content: space-between;
             }
-            /* Remove page-break da última página para evitar página em branco extra */
             .print-area .a4-page:last-child {
                 page-break-after: auto;
             }
         }
 
-        /* Esconde a área de impressão na tela */
         @media screen {
             .print-area {
                 display: none !important;
@@ -97,17 +145,19 @@
             min-height: 297mm;
             background: white;
             padding: 20mm;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            border-radius: 18px;
             margin: 0 auto 2rem auto;
             position: relative;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            border: 1px solid rgba(0, 0, 0, 0.04);
         }
 
         /* Campos de controle especial */
         .box-controle {
-            border: 1px solid #000;
+            border: 1px solid #1d1d1f;
             padding: 8px;
             font-size: 10px;
             line-height: 1.4;
@@ -161,111 +211,111 @@
             const pageClass = forPrint ? "a4-page" : "a4-preview";
 
             return (
-                <div className={pageClass}>
+                <div className={pageClass} style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
                     <div>
                         {/* Cabeçalho */}
-                        <div style={{ textAlign: 'center', borderBottom: '2px solid #0d9488', paddingBottom: '16px', marginBottom: '32px' }}>
+                        <div style={{ textAlign: 'center', borderBottom: '1.5px solid #d2d2d7', paddingBottom: '18px', marginBottom: '28px' }}>
                             {clinic.logo ? (
                                 <React.Fragment>
-                                    <img src={clinic.logo} alt={clinic.name} style={{ maxHeight: '100px', margin: '0 auto 12px auto', display: 'block' }} />
-                                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>{doctor.name}</h1>
-                                    <p style={{ fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>{doctor.specialty} | {doctor.crm}</p>
+                                    <img src={clinic.logo} alt={clinic.name} style={{ maxHeight: '90px', margin: '0 auto 14px auto', display: 'block' }} />
+                                    <h1 style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.01em' }}>{doctor.name}</h1>
+                                    <p style={{ fontSize: '12px', color: '#6e6e73', fontWeight: '400', marginTop: '3px' }}>{doctor.specialty} | {doctor.crm}</p>
                                 </React.Fragment>
                             ) : (
                                 <React.Fragment>
-                                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>{doctor.name}</h1>
-                                    <p style={{ fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>{doctor.specialty} | {doctor.crm}</p>
-                                    <p style={{ fontSize: '12px', color: '#1f2937', marginTop: '8px', fontWeight: 'bold' }}>{clinic.name}</p>
-                                    <p style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'pre-line', marginTop: '4px' }}>{clinic.address}</p>
-                                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Tel: {clinic.phone}</p>
+                                    <h1 style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.01em' }}>{doctor.name}</h1>
+                                    <p style={{ fontSize: '12px', color: '#6e6e73', fontWeight: '400', marginTop: '3px' }}>{doctor.specialty} | {doctor.crm}</p>
+                                    <p style={{ fontSize: '11px', color: '#1d1d1f', marginTop: '10px', fontWeight: '600' }}>{clinic.name}</p>
+                                    <p style={{ fontSize: '10px', color: '#86868b', whiteSpace: 'pre-line', marginTop: '4px', lineHeight: '1.5' }}>{clinic.address}</p>
+                                    <p style={{ fontSize: '10px', color: '#86868b', marginTop: '3px' }}>Tel: {clinic.phone}</p>
                                 </React.Fragment>
                             )}
                         </div>
 
                         {/* Título da Receita */}
-                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                            <h2 style={{ fontSize: '17px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                                 {isControlled ? "Receituário de Controle Especial" : "Receituário"}
                             </h2>
                             {isControlled && (
-                                <p style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', marginTop: '4px' }}>
+                                <p style={{ fontSize: '13px', fontWeight: '500', color: '#6e6e73', marginTop: '4px' }}>
                                     {via === 1 ? "1ª VIA - RETENÇÃO DA FARMÁCIA" : "2ª VIA - ORIENTAÇÃO AO PACIENTE"}
                                 </p>
                             )}
                         </div>
 
                         {/* Paciente */}
-                        <div style={{ marginBottom: '32px' }}>
-                            <p style={{ fontSize: '18px', color: '#1f2937', borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>
+                        <div style={{ marginBottom: '28px' }}>
+                            <p style={{ fontSize: '16px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px' }}>
                                 <span style={{ fontWeight: '600' }}>Paciente:</span>{' '}
-                                {patient.name || <span style={{ color: '#d1d5db', fontStyle: 'italic' }}>Nome do paciente...</span>}
+                                {patient.name || <span style={{ color: '#d2d2d7', fontStyle: 'italic' }}>Nome do paciente...</span>}
                             </p>
                             {isControlled && (
-                                <p style={{ fontSize: '14px', color: '#1f2937', borderBottom: '1px solid #d1d5db', paddingBottom: '4px', marginTop: '8px' }}>
+                                <p style={{ fontSize: '13px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px', marginTop: '10px' }}>
                                     <span style={{ fontWeight: '600' }}>Endereço:</span>{' '}
-                                    {patient.address || <span style={{ color: '#d1d5db', fontStyle: 'italic' }}>Endereço completo...</span>}
+                                    {patient.address || <span style={{ color: '#d2d2d7', fontStyle: 'italic' }}>Endereço completo...</span>}
                                 </p>
                             )}
                         </div>
 
                         {/* Medicamentos */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
                             {meds.map((med, index) => (
-                                <div key={med.id || index} style={{ paddingLeft: '16px' }}>
+                                <div key={med.id || index} style={{ paddingLeft: '12px' }}>
                                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-                                        <span style={{ fontWeight: '600', color: '#1f2937', fontSize: '18px' }}>{index + 1}.</span>
-                                        <span style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '18px' }}>{med.name}</span>
+                                        <span style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '16px' }}>{index + 1}.</span>
+                                        <span style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '16px' }}>{med.name}</span>
                                     </div>
-                                    <div style={{ paddingLeft: '24px', color: '#374151', whiteSpace: 'pre-line', fontSize: '16px' }}>
-                                        <span style={{ fontWeight: '500', color: '#0f766e', fontStyle: 'italic', display: 'block', marginBottom: '4px' }}>{med.route}</span>
-                                        {med.instructions || <span style={{ color: '#d1d5db', fontStyle: 'italic' }}>Instruções de uso...</span>}
+                                    <div style={{ paddingLeft: '22px', color: '#424245', whiteSpace: 'pre-line', fontSize: '15px', lineHeight: '1.5' }}>
+                                        <span style={{ fontWeight: '500', color: '#0071e3', fontStyle: 'italic', display: 'block', marginBottom: '3px', fontSize: '13px' }}>{med.route}</span>
+                                        {med.instructions || <span style={{ color: '#d2d2d7', fontStyle: 'italic' }}>Instruções de uso...</span>}
                                     </div>
                                 </div>
                             ))}
                             {meds.length === 0 && (
-                                <p style={{ color: '#9ca3af', fontStyle: 'italic', textAlign: 'center', margin: '40px 0' }}>Os medicamentos adicionados aparecerão aqui.</p>
+                                <p style={{ color: '#86868b', fontStyle: 'italic', textAlign: 'center', margin: '40px 0', fontSize: '14px' }}>Os medicamentos adicionados aparecerão aqui.</p>
                             )}
                         </div>
                     </div>
 
                     {/* Rodapé */}
-                    <div style={{ marginTop: 'auto', paddingTop: '32px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '32px' }}>
-                            <div style={{ borderTop: '1px solid #1f2937', width: '256px', textAlign: 'center', paddingTop: '8px' }}>
-                                <p style={{ fontWeight: 'bold', color: '#1f2937', fontSize: '14px' }}>{doctor.name}</p>
-                                <p style={{ fontSize: '12px', color: '#4b5563' }}>{doctor.crm}</p>
+                    <div style={{ marginTop: 'auto', paddingTop: '28px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
+                            <div style={{ borderTop: '1px solid #1d1d1f', width: '240px', textAlign: 'center', paddingTop: '10px' }}>
+                                <p style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '13px' }}>{doctor.name}</p>
+                                <p style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{doctor.crm}</p>
                             </div>
-                            <p style={{ fontSize: '14px', color: '#4b5563', marginTop: '16px' }}>
+                            <p style={{ fontSize: '13px', color: '#6e6e73', marginTop: '16px' }}>
                                 {city}, {formatDate(hideDate)}
                             </p>
                         </div>
 
                         {/* Caixas Anvisa para controlados */}
                         {isControlled && (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '2px solid #e5e7eb', paddingTop: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1.5px solid #d2d2d7', paddingTop: '16px' }}>
                                 <div className="box-controle">
-                                    <h4 style={{ fontWeight: 'bold', textAlign: 'center', borderBottom: '1px solid #d1d5db', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase' }}>Identificação do Comprador</h4>
+                                    <h4 style={{ fontWeight: '600', textAlign: 'center', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.04em' }}>Identificação do Comprador</h4>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <p style={{ borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>Nome:</p>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>
+                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Nome:</p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>
                                             <p>RG:</p>
                                             <p>Órgão Emissor:</p>
                                         </div>
-                                        <p style={{ borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>Endereço:</p>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>
+                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Endereço:</p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>
                                             <p>Cidade / UF:</p>
                                             <p>Telefone:</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="box-controle" style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <h4 style={{ fontWeight: 'bold', textAlign: 'center', borderBottom: '1px solid #d1d5db', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase' }}>Identificação do Fornecedor</h4>
-                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #d1d5db', marginBottom: '8px' }}>
-                                        <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>Carimbo da Farmácia</p>
+                                    <h4 style={{ fontWeight: '600', textAlign: 'center', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.04em' }}>Identificação do Fornecedor</h4>
+                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #d2d2d7', marginBottom: '8px' }}>
+                                        <p style={{ color: '#86868b', fontStyle: 'italic' }}>Carimbo da Farmácia</p>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                        <p style={{ borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>Data:</p>
-                                        <p style={{ borderBottom: '1px solid #d1d5db', paddingBottom: '4px' }}>Assinatura:</p>
+                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Data:</p>
+                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Assinatura:</p>
                                     </div>
                                 </div>
                             </div>
@@ -442,19 +492,20 @@
             return (
                 <React.Fragment>
                     <div className="flex h-screen overflow-hidden no-print">
-                        
+
                         {/* COLUNA ESQUERDA: INTERFACE DE CONTROLE */}
-                        <div className="w-full md:w-[450px] bg-white shadow-xl z-10 flex flex-col h-full border-r border-gray-200">
-                            
+                        <div className="w-full md:w-[440px] flex flex-col h-full border-r" style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)', borderColor: '#d2d2d7' }}>
+
                             {/* Header */}
-                            <div className="p-5 border-b border-gray-100 bg-brand-600 text-white flex justify-between items-center shadow-sm">
+                            <div className="px-6 py-5 flex justify-between items-center" style={{ borderBottom: '1px solid #d2d2d7' }}>
                                 <div>
-                                    <h1 className="text-lg font-bold">Prescritor Digital</h1>
-                                    <p className="text-xs text-brand-100 opacity-90">Simples e prático</p>
+                                    <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#1d1d1f', letterSpacing: '-0.02em' }}>Prescritor Digital</h1>
+                                    <p className="text-xs mt-0.5" style={{ color: '#6e6e73' }}>Simples e prático</p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setShowDoctorSettings(!showDoctorSettings)}
-                                    className="p-2 hover:bg-brand-500 rounded-full transition"
+                                    className="p-2.5 rounded-full transition-all"
+                                    style={{ background: showDoctorSettings ? '#e8e8ed' : 'transparent', color: '#1d1d1f' }}
                                     title="Configurar Médico"
                                 >
                                     <Icons.Settings />
@@ -462,119 +513,122 @@
                             </div>
 
                             {/* Corpo */}
-                            <div className="flex-1 overflow-y-auto p-5 hide-scrollbar space-y-6">
-                                
+                            <div className="flex-1 overflow-y-auto px-6 py-5 hide-scrollbar space-y-6">
+
                                 {/* Configurações do Médico */}
                                 {showDoctorSettings && (
-                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 mb-6">
-                                        <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">Dados do Prescritor</h3>
+                                    <div className="p-5 rounded-2xl space-y-4 mb-2" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                        <h3 className="text-xs font-semibold uppercase" style={{ color: '#6e6e73', letterSpacing: '0.06em' }}>Dados do Prescritor</h3>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Nome Completo</label>
-                                            <input type="text" value={doctor.name} onChange={(e) => setDoctor({...doctor, name: e.target.value})} className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 outline-none" />
+                                            <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>Nome Completo</label>
+                                            <input type="text" value={doctor.name} onChange={(e) => setDoctor({...doctor, name: e.target.value})} className="w-full text-sm p-2.5 rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }} />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">CRM e RQE</label>
-                                                <input type="text" value={doctor.crm} onChange={(e) => setDoctor({...doctor, crm: e.target.value})} className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 outline-none" />
+                                                <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>CRM e RQE</label>
+                                                <input type="text" value={doctor.crm} onChange={(e) => setDoctor({...doctor, crm: e.target.value})} className="w-full text-sm p-2.5 rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }} />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Especialidade</label>
-                                                <input type="text" value={doctor.specialty} onChange={(e) => setDoctor({...doctor, specialty: e.target.value})} className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 outline-none" />
+                                                <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>Especialidade</label>
+                                                <input type="text" value={doctor.specialty} onChange={(e) => setDoctor({...doctor, specialty: e.target.value})} className="w-full text-sm p-2.5 rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }} />
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Clínica de Atendimento</label>
-                                            <select 
-                                                value={selectedClinicId} 
+                                            <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>Clínica de Atendimento</label>
+                                            <select
+                                                value={selectedClinicId}
                                                 onChange={(e) => setSelectedClinicId(e.target.value)}
-                                                className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 outline-none bg-white"
+                                                className="w-full text-sm p-2.5 rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }}
                                             >
                                                 <option value="EIXO">EIXO Neurologia Especializada</option>
                                                 <option value="NA">NA Neurologistas Associados</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-500 mb-1">Cidade atual</label>
-                                            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 outline-none" />
+                                            <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>Cidade atual</label>
+                                            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full text-sm p-2.5 rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }} />
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Paciente */}
                                 <div>
-                                    <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mb-3">Paciente</h3>
+                                    <h3 className="text-xs font-semibold uppercase mb-3" style={{ color: '#6e6e73', letterSpacing: '0.06em' }}>Paciente</h3>
                                     <div className="space-y-3">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Nome do Paciente" 
+                                        <input
+                                            type="text"
+                                            placeholder="Nome do Paciente"
                                             value={patient.name}
                                             onChange={(e) => setPatient({...patient, name: e.target.value})}
-                                            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none font-medium transition"
+                                            className="w-full p-3 rounded-xl outline-none font-medium text-sm" style={{ border: '1px solid #d2d2d7', color: '#1d1d1f' }}
                                         />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Endereço do Paciente (Para receitas controladas)" 
+                                        <input
+                                            type="text"
+                                            placeholder="Endereço do Paciente (Para receitas controladas)"
                                             value={patient.address}
                                             onChange={(e) => setPatient({...patient, address: e.target.value})}
-                                            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                                            className="w-full p-3 text-sm rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', color: '#1d1d1f' }}
                                         />
                                     </div>
                                 </div>
 
-                                <hr className="border-gray-100" />
+                                <hr style={{ border: 'none', borderTop: '1px solid #e8e8ed' }} />
 
                                 {/* Medicamentos */}
                                 <div>
                                     <div className="flex justify-between items-center mb-3">
-                                        <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">Prescrição</h3>
-                                        <span className="text-xs text-gray-400">
+                                        <h3 className="text-xs font-semibold uppercase" style={{ color: '#6e6e73', letterSpacing: '0.06em' }}>Prescrição</h3>
+                                        <span className="text-xs" style={{ color: '#86868b' }}>
                                             {medications.filter(m => m.name.trim()).length} medicamento(s)
                                         </span>
                                     </div>
-                                    
-                                    <div className="space-y-4">
+
+                                    <div className="space-y-3">
                                         {medications.map((med, index) => (
-                                            <div key={med.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative group hover:border-brand-300 transition-colors">
+                                            <div key={med.id} className="relative group p-4 rounded-2xl transition-all" style={{ background: '#fff', border: '1px solid #e8e8ed', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                                                 {/* Botões de ação */}
                                                 <div className="absolute top-3 right-3 flex gap-1">
                                                     {index > 0 && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => moveMedication(med.id, -1)}
-                                                            className="text-gray-400 hover:text-brand-600 transition-colors p-0.5"
+                                                            className="p-1 rounded-lg transition-colors"
+                                                            style={{ color: '#86868b' }}
                                                             title="Mover para cima"
                                                         >
                                                             <Icons.ChevronUp />
                                                         </button>
                                                     )}
                                                     {index < medications.length - 1 && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => moveMedication(med.id, 1)}
-                                                            className="text-gray-400 hover:text-brand-600 transition-colors p-0.5"
+                                                            className="p-1 rounded-lg transition-colors"
+                                                            style={{ color: '#86868b' }}
                                                             title="Mover para baixo"
                                                         >
                                                             <Icons.ChevronDown />
                                                         </button>
                                                     )}
                                                     {medications.length > 1 && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => removeMedication(med.id)}
-                                                            className="text-gray-400 hover:text-red-500 transition-colors p-0.5"
+                                                            className="p-1 rounded-lg transition-colors hover:text-red-500"
+                                                            style={{ color: '#86868b' }}
                                                             title="Remover medicamento"
                                                         >
                                                             <Icons.Trash />
                                                         </button>
                                                     )}
                                                 </div>
-                                                
+
                                                 <div className="pr-16 space-y-3">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                                                        <span className="text-xs font-semibold px-2 py-0.5 rounded-lg" style={{ color: '#6e6e73', background: '#f5f5f7' }}>
                                                             #{index + 1}
                                                         </span>
-                                                        <select 
+                                                        <select
                                                             value={med.route}
                                                             onChange={(e) => updateMedication(med.id, 'route', e.target.value)}
-                                                            className="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none"
+                                                            className="text-sm rounded-xl p-2 outline-none" style={{ border: '1px solid #d2d2d7', color: '#1d1d1f', background: '#fbfbfd' }}
                                                         >
                                                             <option>Uso Oral</option>
                                                             <option>Uso Tópico</option>
@@ -588,57 +642,57 @@
                                                         </select>
                                                     </div>
 
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder="Medicamento e apresentação (Ex: Amoxicilina 500mg)" 
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Medicamento e apresentação (Ex: Amoxicilina 500mg)"
                                                         value={med.name}
                                                         onChange={(e) => updateMedication(med.id, 'name', e.target.value)}
-                                                        className="w-full p-2 border-b border-gray-300 focus:border-brand-500 outline-none font-semibold text-gray-800 bg-transparent transition"
+                                                        className="w-full p-2 outline-none font-semibold bg-transparent transition" style={{ borderBottom: '1px solid #d2d2d7', color: '#1d1d1f' }}
                                                     />
-                                                    
-                                                    <textarea 
-                                                        placeholder="Posologia e orientações" 
+
+                                                    <textarea
+                                                        placeholder="Posologia e orientações"
                                                         value={med.instructions}
                                                         onChange={(e) => updateMedication(med.id, 'instructions', e.target.value)}
                                                         rows="2"
-                                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-1 focus:ring-brand-500 outline-none resize-none transition"
+                                                        className="w-full p-2.5 text-sm rounded-xl outline-none resize-none transition" style={{ border: '1px solid #e8e8ed', color: '#1d1d1f', background: '#fbfbfd' }}
                                                     ></textarea>
 
                                                     {/* Opções do Medicamento */}
-                                                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
-                                                        <label className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition flex-1 min-w-[130px]">
-                                                            <input 
-                                                                type="checkbox" 
+                                                    <div className="flex flex-wrap gap-2 mt-2 pt-3" style={{ borderTop: '1px solid #f0f0f2' }}>
+                                                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl transition flex-1 min-w-[130px]" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                                            <input
+                                                                type="checkbox"
                                                                 checked={med.isControlled}
                                                                 onChange={(e) => updateMedication(med.id, 'isControlled', e.target.checked)}
-                                                                className="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 cursor-pointer" 
+                                                                className="w-4 h-4 rounded cursor-pointer accent-blue-600"
                                                             />
-                                                            <span className="text-xs font-medium text-gray-700 select-none">
+                                                            <span className="text-xs font-medium select-none" style={{ color: '#1d1d1f' }}>
                                                                 Controlado
                                                             </span>
                                                         </label>
 
-                                                        <label className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition flex-1 min-w-[120px]">
-                                                            <input 
-                                                                type="checkbox" 
+                                                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl transition flex-1 min-w-[120px]" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                                            <input
+                                                                type="checkbox"
                                                                 checked={med.hideDate}
                                                                 onChange={(e) => updateMedication(med.id, 'hideDate', e.target.checked)}
-                                                                className="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 cursor-pointer" 
+                                                                className="w-4 h-4 rounded cursor-pointer accent-blue-600"
                                                             />
-                                                            <span className="text-xs font-medium text-gray-700 select-none">
+                                                            <span className="text-xs font-medium select-none" style={{ color: '#1d1d1f' }}>
                                                                 Sem Data
                                                             </span>
                                                         </label>
 
-                                                        <div className="flex items-center gap-2 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-200 flex-1 min-w-[120px] justify-between">
-                                                            <span className="text-xs font-medium text-gray-700">Vias/Cópias:</span>
-                                                            <input 
-                                                                type="number" 
-                                                                min="1" 
-                                                                max="12" 
+                                                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl flex-1 min-w-[120px] justify-between" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                                            <span className="text-xs font-medium" style={{ color: '#1d1d1f' }}>Vias/Cópias:</span>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max="12"
                                                                 value={med.copies}
                                                                 onChange={(e) => updateMedication(med.id, 'copies', parseInt(e.target.value) || 1)}
-                                                                className="w-12 p-1 text-center text-xs border border-gray-300 rounded focus:ring-1 focus:ring-brand-500 outline-none" 
+                                                                className="w-12 p-1 text-center text-xs rounded-lg outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }}
                                                             />
                                                         </div>
                                                     </div>
@@ -647,9 +701,12 @@
                                         ))}
                                     </div>
 
-                                    <button 
+                                    <button
                                         onClick={addMedication}
-                                        className="mt-4 w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium hover:text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition flex items-center justify-center gap-2"
+                                        className="mt-4 w-full py-3 rounded-2xl font-medium transition-all flex items-center justify-center gap-2 text-sm"
+                                        style={{ border: '2px dashed #d2d2d7', color: '#6e6e73', background: 'transparent' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0071e3'; e.currentTarget.style.color = '#0071e3'; e.currentTarget.style.background = 'rgba(0,113,227,0.04)'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#d2d2d7'; e.currentTarget.style.color = '#6e6e73'; e.currentTarget.style.background = 'transparent'; }}
                                     >
                                         <Icons.Plus /> Adicionar Medicamento
                                     </button>
@@ -657,17 +714,18 @@
                             </div>
 
                             {/* Footer */}
-                            <div className="p-5 border-t border-gray-200 bg-gray-50 space-y-2">
-                                <div className="text-xs text-gray-500 text-center mb-2">
-                                    {printPages.length === 0 
-                                        ? 'Nenhuma página para imprimir' 
+                            <div className="px-6 py-5 space-y-2" style={{ borderTop: '1px solid #d2d2d7', background: 'rgba(255,255,255,0.5)' }}>
+                                <div className="text-xs text-center mb-2" style={{ color: '#86868b' }}>
+                                    {printPages.length === 0
+                                        ? 'Nenhuma página para imprimir'
                                         : `${printPages.length} página(s) para impressão`
                                     }
                                 </div>
-                                <button 
+                                <button
                                     onClick={handlePrint}
                                     disabled={printPages.length === 0}
-                                    className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3.5 px-4 rounded-xl font-bold shadow-lg shadow-brand-500/30 disabled:shadow-none transition-all flex justify-center items-center gap-2 text-lg"
+                                    className="apple-btn w-full flex justify-center items-center gap-2"
+                                    style={{ fontSize: '17px', fontWeight: '400', letterSpacing: '-0.01em' }}
                                 >
                                     <Icons.Printer /> Imprimir / Salvar PDF
                                 </button>
@@ -675,21 +733,21 @@
                         </div>
 
                         {/* COLUNA DIREITA: PREVIEW */}
-                        <div className="flex-1 overflow-y-auto bg-slate-200 p-8 hide-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-10 hide-scrollbar" style={{ background: '#f5f5f7' }}>
                             <div className="max-w-4xl mx-auto space-y-8">
-                                
-                                <div className="bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200 text-sm flex items-start gap-3 shadow-sm">
-                                    <div className="mt-0.5">ℹ️</div>
+
+                                <div className="p-4 rounded-2xl text-sm flex items-start gap-3" style={{ background: '#fbfbfd', border: '1px solid #d2d2d7', color: '#1d1d1f' }}>
+                                    <div className="mt-0.5" style={{ fontSize: '16px' }}>ℹ️</div>
                                     <div>
-                                        <p className="font-semibold">Lógica de Impressão Automática</p>
-                                        <p>As páginas abaixo refletem exatamente o que sairá na impressora. Medicamentos são agrupados por tipo (simples vs. controlado) e por presença de data. Medicamentos controlados geram 1ª e 2ª via automaticamente.</p>
+                                        <p className="font-semibold" style={{ color: '#1d1d1f' }}>Lógica de Impressão Automática</p>
+                                        <p style={{ color: '#6e6e73', marginTop: '2px' }}>As páginas abaixo refletem exatamente o que sairá na impressora. Medicamentos são agrupados por tipo (simples vs. controlado) e por presença de data. Medicamentos controlados geram 1ª e 2ª via automaticamente.</p>
                                     </div>
                                 </div>
 
                                 {pages.map((page) => (
                                     <div key={page.id}>
                                         {!page.isEmpty && (
-                                            <h3 className="text-gray-500 font-semibold mb-2 text-center text-sm mt-8">
+                                            <h3 className="font-medium mb-3 text-center text-xs uppercase mt-8" style={{ color: '#86868b', letterSpacing: '0.06em' }}>
                                                 {getPageLabel(page)}
                                             </h3>
                                         )}
