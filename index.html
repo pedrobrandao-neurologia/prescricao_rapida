@@ -50,6 +50,9 @@
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- jsPDF para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+
     <style>
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
@@ -179,7 +182,13 @@
             Copy: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
             ChevronDown: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>,
             ChevronUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>,
-            FileText: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            FileText: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            Search: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+            Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+            WhatsApp: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>,
+            Eraser: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0L21.4 5.6c.8.8.8 2 0 2.8L10 20"></path><path d="M6 12l6 6"></path></svg>,
+            Clipboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>,
+            Pill: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg>
         };
 
         const CLINICS = {
@@ -196,6 +205,55 @@
                 logo: 'na_logo.png'
             }
         };
+
+        // ========================================
+        // Mock ANVISA - Dados de Medicamentos
+        // ========================================
+        const ANVISA_MEDICATIONS = [
+            { id: 1, principioAtivo: 'Levodopa + Benserazida', nomeComercial: 'Prolopa', apresentacao: '200/50mg comprimido', isControlled: false },
+            { id: 2, principioAtivo: 'Pramipexol', nomeComercial: 'Sifrol', apresentacao: '0,25mg comprimido', isControlled: false },
+            { id: 3, principioAtivo: 'Donepezila', nomeComercial: 'ErANZ', apresentacao: '10mg comprimido', isControlled: false },
+            { id: 4, principioAtivo: 'Quetiapina', nomeComercial: 'Seroquel', apresentacao: '25mg comprimido', isControlled: true },
+            { id: 5, principioAtivo: 'Toxina Botulínica A', nomeComercial: 'Botox', apresentacao: '100U frasco-ampola', isControlled: false },
+        ];
+
+        const searchAnvisaMedications = (query) => {
+            if (!query || query.length < 3) return [];
+            const q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return ANVISA_MEDICATIONS.filter(med => {
+                const searchFields = [
+                    med.principioAtivo, med.nomeComercial, med.apresentacao
+                ].join(' ').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return searchFields.includes(q);
+            });
+        };
+
+        // ========================================
+        // Templates / Kits de Acesso Rápido
+        // ========================================
+        const TEMPLATE_KITS = [
+            {
+                id: 'atestado',
+                label: 'Atestado Médico',
+                icon: 'FileText',
+                title: 'Atestado Médico',
+                content: 'Atesto para os devidos fins que o(a) paciente acima identificado(a) esteve sob meus cuidados profissionais na data de hoje, necessitando de afastamento de suas atividades por ______ (______) dia(s), a partir desta data.\n\nCID: ________'
+            },
+            {
+                id: 'comparecimento',
+                label: 'Atestado de Comparecimento',
+                icon: 'Clipboard',
+                title: 'Atestado de Comparecimento',
+                content: 'Atesto para os devidos fins que o(a) paciente acima identificado(a) compareceu a esta clínica na data de hoje para consulta médica, permanecendo no local das ______ às ______ horas.'
+            },
+            {
+                id: 'acompanhamento',
+                label: 'Acompanhante',
+                icon: 'Clipboard',
+                title: 'Atestado de Acompanhamento',
+                content: 'Atesto para os devidos fins que ________________________________________, portador(a) do documento de identidade nº ______________________, esteve acompanhando o(a) paciente acima identificado(a) em consulta médica nesta clínica na data de hoje, permanecendo no local das ______ às ______ horas.'
+            },
+        ];
 
         // Helper: data formatada
         const formatDate = (hideDate) => {
@@ -461,6 +519,100 @@
         };
 
         // ========================================
+        // Componente de Busca de Medicamento (Typeahead)
+        // ========================================
+        const MedicationSearch = ({ onSelect }) => {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState([]);
+            const [showDropdown, setShowDropdown] = useState(false);
+            const inputRef = React.useRef(null);
+            const dropdownRef = React.useRef(null);
+
+            useEffect(() => {
+                if (query.length >= 3) {
+                    const found = searchAnvisaMedications(query);
+                    setResults(found);
+                    setShowDropdown(found.length > 0);
+                } else {
+                    setResults([]);
+                    setShowDropdown(false);
+                }
+            }, [query]);
+
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(e.target) &&
+                        inputRef.current && !inputRef.current.contains(e.target)) {
+                        setShowDropdown(false);
+                    }
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, []);
+
+            const handleSelect = (med) => {
+                onSelect(med);
+                setQuery('');
+                setResults([]);
+                setShowDropdown(false);
+            };
+
+            return (
+                <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#86868b' }}>
+                            <Icons.Search />
+                        </div>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="Buscar medicamento ANVISA (mín. 3 letras)..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
+                            className="w-full p-3 pl-10 rounded-xl outline-none text-sm"
+                            style={{ border: '1px solid #d2d2d7', color: '#1d1d1f', background: '#fbfbfd' }}
+                        />
+                    </div>
+                    {showDropdown && (
+                        <div
+                            ref={dropdownRef}
+                            style={{
+                                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                                background: '#fff', border: '1px solid #d2d2d7', borderRadius: '12px',
+                                marginTop: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                                maxHeight: '220px', overflowY: 'auto'
+                            }}
+                        >
+                            {results.map(med => (
+                                <button
+                                    key={med.id}
+                                    onClick={() => handleSelect(med)}
+                                    className="w-full text-left px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid #f0f0f2', color: '#1d1d1f' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f7'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span style={{ color: '#0071e3' }}><Icons.Pill /></span>
+                                        <span className="font-semibold text-sm">{med.principioAtivo}</span>
+                                        <span className="text-xs px-2 py-0.5 rounded-lg" style={{ background: '#f5f5f7', color: '#6e6e73' }}>
+                                            {med.nomeComercial}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs mt-1" style={{ color: '#86868b', paddingLeft: '24px' }}>
+                                        {med.apresentacao}
+                                        {med.isControlled && <span style={{ color: '#e34040', fontWeight: '600', marginLeft: '8px' }}>Controlado</span>}
+                                    </p>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ========================================
         // App Principal
         // ========================================
         const App = () => {
@@ -537,6 +689,202 @@
             const handlePrint = () => {
                 window.print();
             };
+
+            // Adicionar medicamento da busca ANVISA
+            const handleAddFromSearch = useCallback((anvisaMed) => {
+                const medName = `${anvisaMed.principioAtivo} (${anvisaMed.nomeComercial}) - ${anvisaMed.apresentacao}`;
+                setMedications(prev => [...prev, {
+                    id: Date.now(),
+                    route: 'Uso Oral',
+                    name: medName,
+                    instructions: '',
+                    isControlled: anvisaMed.isControlled,
+                    hideDate: false,
+                    copies: 1
+                }]);
+            }, []);
+
+            // Adicionar template de texto livre
+            const handleAddTemplate = useCallback((template) => {
+                setFreeTexts(prev => [...prev, {
+                    id: Date.now(),
+                    title: template.title,
+                    content: template.content
+                }]);
+            }, []);
+
+            // Limpar toda a receita
+            const handleClearPrescription = useCallback(() => {
+                setPatient({ name: '', cpf: '', address: '' });
+                setMedications([{ id: Date.now(), route: 'Uso Oral', name: '', instructions: '', isControlled: false, hideDate: false, copies: 1 }]);
+                setFreeTexts([]);
+            }, []);
+
+            // Baixar PDF com jsPDF
+            const handleDownloadPDF = useCallback(() => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const pageWidth = 210;
+                const margin = 20;
+                const contentWidth = pageWidth - 2 * margin;
+                let isFirstPage = true;
+
+                printPages.forEach((page) => {
+                    if (!isFirstPage) doc.addPage();
+                    isFirstPage = false;
+
+                    let y = margin;
+
+                    // Cabeçalho
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(doctor.name, pageWidth / 2, y, { align: 'center' });
+                    y += 6;
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`${doctor.specialty} | ${doctor.crm}`, pageWidth / 2, y, { align: 'center' });
+                    y += 5;
+                    doc.setFontSize(9);
+                    doc.text(clinic.name, pageWidth / 2, y, { align: 'center' });
+                    y += 4;
+                    const addressLines = clinic.address.split('\n');
+                    addressLines.forEach(line => {
+                        doc.text(line.trim(), pageWidth / 2, y, { align: 'center' });
+                        y += 3.5;
+                    });
+                    doc.text(`Tel: ${clinic.phone}`, pageWidth / 2, y, { align: 'center' });
+                    y += 6;
+
+                    // Linha separadora
+                    doc.setDrawColor(210, 210, 215);
+                    doc.line(margin, y, pageWidth - margin, y);
+                    y += 8;
+
+                    // Título controlado
+                    if (page.isControlled) {
+                        doc.setFontSize(13);
+                        doc.setFont(undefined, 'bold');
+                        doc.text('RECEITUÁRIO DE CONTROLE ESPECIAL', pageWidth / 2, y, { align: 'center' });
+                        y += 6;
+                        doc.setFontSize(10);
+                        doc.setFont(undefined, 'normal');
+                        doc.text(
+                            page.via === 1 ? '1ª VIA - RETENÇÃO DA FARMÁCIA' : '2ª VIA - ORIENTAÇÃO AO PACIENTE',
+                            pageWidth / 2, y, { align: 'center' }
+                        );
+                        y += 10;
+                    }
+
+                    // Paciente
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Paciente: ', margin, y);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(patient.name || '___________________________', margin + doc.getTextWidth('Paciente: '), y);
+                    y += 6;
+                    if (patient.cpf) {
+                        doc.setFont(undefined, 'bold');
+                        doc.text('CPF: ', margin, y);
+                        doc.setFont(undefined, 'normal');
+                        doc.text(patient.cpf, margin + doc.getTextWidth('CPF: '), y);
+                        y += 6;
+                    }
+                    if (page.isControlled && patient.address) {
+                        doc.setFont(undefined, 'bold');
+                        doc.text('Endereço: ', margin, y);
+                        doc.setFont(undefined, 'normal');
+                        doc.text(patient.address, margin + doc.getTextWidth('Endereço: '), y);
+                        y += 6;
+                    }
+                    y += 6;
+
+                    // Medicamentos
+                    page.meds.forEach((med, idx) => {
+                        doc.setFontSize(12);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`${idx + 1}. ${med.name}`, margin + 4, y);
+                        y += 5;
+                        doc.setFontSize(10);
+                        doc.setFont(undefined, 'italic');
+                        doc.setTextColor(0, 113, 227);
+                        doc.text(med.route, margin + 12, y);
+                        doc.setTextColor(0, 0, 0);
+                        y += 5;
+                        if (med.instructions) {
+                            doc.setFont(undefined, 'normal');
+                            const instrLines = doc.splitTextToSize(med.instructions, contentWidth - 12);
+                            instrLines.forEach(line => {
+                                doc.text(line, margin + 12, y);
+                                y += 4.5;
+                            });
+                        }
+                        y += 4;
+                    });
+
+                    // Texto livre
+                    if (page.freeTexts && page.freeTexts.length > 0) {
+                        page.freeTexts.forEach(ft => {
+                            if (ft.title) {
+                                doc.setFontSize(12);
+                                doc.setFont(undefined, 'bold');
+                                doc.text(ft.title.toUpperCase(), pageWidth / 2, y, { align: 'center' });
+                                y += 8;
+                            }
+                            doc.setFontSize(11);
+                            doc.setFont(undefined, 'normal');
+                            const ftLines = doc.splitTextToSize(ft.content, contentWidth);
+                            ftLines.forEach(line => {
+                                doc.text(line, margin, y);
+                                y += 5;
+                            });
+                            y += 4;
+                        });
+                    }
+
+                    // Assinatura no rodapé
+                    const footerY = 260;
+                    doc.setDrawColor(29, 29, 31);
+                    doc.line(pageWidth / 2 - 40, footerY, pageWidth / 2 + 40, footerY);
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(doctor.name, pageWidth / 2, footerY + 5, { align: 'center' });
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(9);
+                    doc.text(doctor.crm, pageWidth / 2, footerY + 9, { align: 'center' });
+                    doc.text(`${city}, ${formatDate(page.hideDate)}`, pageWidth / 2, footerY + 15, { align: 'center' });
+                });
+
+                // Nome do arquivo com paciente e data
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                const patientSlug = (patient.name || 'paciente').trim().replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const fileName = `prescricao_${patientSlug}_${dateStr}.pdf`;
+                doc.save(fileName);
+            }, [printPages, doctor, clinic, city, patient]);
+
+            // Enviar por WhatsApp
+            const handleWhatsApp = useCallback(() => {
+                const medList = medications
+                    .filter(m => m.name.trim())
+                    .map((m, i) => `${i + 1}. ${m.name} (${m.route})\n   ${m.instructions}`)
+                    .join('\n\n');
+
+                let msg = `*Prescrição Médica*\n`;
+                msg += `*Dr(a):* ${doctor.name}\n`;
+                msg += `*CRM:* ${doctor.crm}\n`;
+                msg += `*Paciente:* ${patient.name || '---'}\n`;
+                msg += `*Data:* ${formatDate(false)}\n\n`;
+                if (medList) {
+                    msg += `*Medicamentos:*\n${medList}\n\n`;
+                }
+                freeTexts.filter(ft => ft.content.trim()).forEach(ft => {
+                    if (ft.title) msg += `*${ft.title}:*\n`;
+                    msg += `${ft.content}\n\n`;
+                });
+
+                const encoded = encodeURIComponent(msg);
+                window.open(`https://wa.me/?text=${encoded}`, '_blank');
+            }, [medications, freeTexts, doctor, patient]);
 
             // Descrição de cada página para o banner do preview
             const getPageLabel = (page) => {
@@ -643,6 +991,28 @@
 
                                 <hr style={{ border: 'none', borderTop: '1px solid #e8e8ed' }} />
 
+                                {/* Templates / Kits de Acesso Rápido */}
+                                <div>
+                                    <h3 className="text-xs font-semibold uppercase mb-3" style={{ color: '#6e6e73', letterSpacing: '0.06em' }}>Acesso Rápido</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {TEMPLATE_KITS.map(tpl => (
+                                            <button
+                                                key={tpl.id}
+                                                onClick={() => handleAddTemplate(tpl)}
+                                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
+                                                style={{ background: '#f5f5f7', border: '1px solid #e8e8ed', color: '#1d1d1f' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,113,227,0.06)'; e.currentTarget.style.borderColor = '#0071e3'; e.currentTarget.style.color = '#0071e3'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.background = '#f5f5f7'; e.currentTarget.style.borderColor = '#e8e8ed'; e.currentTarget.style.color = '#1d1d1f'; }}
+                                            >
+                                                {tpl.icon === 'FileText' ? <Icons.FileText /> : <Icons.Clipboard />}
+                                                {tpl.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <hr style={{ border: 'none', borderTop: '1px solid #e8e8ed' }} />
+
                                 {/* Medicamentos */}
                                 <div>
                                     <div className="flex justify-between items-center mb-3">
@@ -650,6 +1020,11 @@
                                         <span className="text-xs" style={{ color: '#86868b' }}>
                                             {medications.filter(m => m.name.trim()).length} medicamento(s)
                                         </span>
+                                    </div>
+
+                                    {/* Busca Inteligente de Medicamentos */}
+                                    <div className="mb-4">
+                                        <MedicationSearch onSelect={handleAddFromSearch} />
                                     </div>
 
                                     <div className="space-y-3">
@@ -844,22 +1219,51 @@
                                 </div>
                             </div>
 
-                            {/* Footer */}
-                            <div className="px-6 py-5 space-y-2" style={{ borderTop: '1px solid #d2d2d7', background: 'rgba(255,255,255,0.5)' }}>
-                                <div className="text-xs text-center mb-2" style={{ color: '#86868b' }}>
+                            {/* Footer de Ações */}
+                            <div className="px-6 py-5 space-y-3" style={{ borderTop: '1px solid #d2d2d7', background: 'rgba(255,255,255,0.5)' }}>
+                                <div className="text-xs text-center mb-1" style={{ color: '#86868b' }}>
                                     {printPages.length === 0
                                         ? 'Nenhuma página para imprimir'
                                         : `${printPages.length} página(s) para impressão`
                                     }
                                 </div>
-                                <button
-                                    onClick={handlePrint}
-                                    disabled={printPages.length === 0}
-                                    className="apple-btn w-full flex justify-center items-center gap-2"
-                                    style={{ fontSize: '17px', fontWeight: '400', letterSpacing: '-0.01em' }}
-                                >
-                                    <Icons.Printer /> Imprimir / Salvar PDF
-                                </button>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={handleDownloadPDF}
+                                        disabled={printPages.length === 0}
+                                        className="apple-btn flex justify-center items-center gap-2"
+                                        style={{ fontSize: '14px', fontWeight: '500', padding: '12px 16px' }}
+                                    >
+                                        <Icons.Download /> Baixar PDF
+                                    </button>
+                                    <button
+                                        onClick={handlePrint}
+                                        disabled={printPages.length === 0}
+                                        className="apple-btn flex justify-center items-center gap-2"
+                                        style={{ fontSize: '14px', fontWeight: '500', padding: '12px 16px' }}
+                                    >
+                                        <Icons.Printer /> Imprimir
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={handleWhatsApp}
+                                        disabled={printPages.length === 0}
+                                        className="flex justify-center items-center gap-2 py-3 rounded-full font-medium transition-all text-sm"
+                                        style={{ background: '#25D366', color: '#fff', border: 'none', cursor: printPages.length === 0 ? 'not-allowed' : 'pointer', opacity: printPages.length === 0 ? 0.5 : 1 }}
+                                    >
+                                        <Icons.WhatsApp /> WhatsApp
+                                    </button>
+                                    <button
+                                        onClick={handleClearPrescription}
+                                        className="flex justify-center items-center gap-2 py-3 rounded-full font-medium transition-all text-sm"
+                                        style={{ background: '#f5f5f7', color: '#e34040', border: '1px solid #e8e8ed', cursor: 'pointer' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e34040'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = '#f5f5f7'; e.currentTarget.style.borderColor = '#e8e8ed'; }}
+                                    >
+                                        <Icons.Eraser /> Limpar Receita
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
