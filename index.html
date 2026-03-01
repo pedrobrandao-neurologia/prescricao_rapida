@@ -185,7 +185,6 @@
             FileText: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
             Search: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
             Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
-            WhatsApp: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>,
             Eraser: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0L21.4 5.6c.8.8.8 2 0 2.8L10 20"></path><path d="M6 12l6 6"></path></svg>,
             Clipboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>,
             Pill: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg>
@@ -410,13 +409,12 @@
         // ========================================
         // Lógica de Geração de Páginas
         // ========================================
-        const generatePages = (medications, freeTextBlocks) => {
+        const generatePages = (medications, freeTextBlocks, separatePrescriptions) => {
             const validMeds = medications.filter(m => m.name.trim() !== '');
             const validFreeTexts = (freeTextBlocks || []).filter(ft => ft.content.trim() !== '');
             const pages = [];
 
             if (validMeds.length === 0 && validFreeTexts.length === 0) {
-                // Página vazia para preview
                 pages.push({
                     id: 'empty',
                     isControlled: false,
@@ -440,6 +438,15 @@
 
             let pageIdCounter = 0;
 
+            // Função para dividir array em chunks
+            const chunkArray = (arr, size) => {
+                const chunks = [];
+                for (let i = 0; i < arr.length; i += size) {
+                    chunks.push(arr.slice(i, i + size));
+                }
+                return chunks;
+            };
+
             groupKeys.forEach(key => {
                 const isControlled = key.startsWith('C');
                 const hideDate = key.endsWith('H');
@@ -450,58 +457,67 @@
 
                 if (groupMeds.length === 0) return;
 
-                // Determina o número máximo de cópias no grupo
                 const maxCopies = Math.max(...groupMeds.map(m => Math.max(1, parseInt(m.copies) || 1)));
 
                 for (let copyNum = 1; copyNum <= maxCopies; copyNum++) {
-                    // Apenas medicamentos que pedem >= copyNum cópias
                     const medsForCopy = groupMeds.filter(m => (Math.max(1, parseInt(m.copies) || 1)) >= copyNum);
-
                     if (medsForCopy.length === 0) continue;
 
-                    if (isControlled) {
-                        // Controlado: gera 1ª via e 2ª via
-                        pages.push({
-                            id: `page-${pageIdCounter++}`,
-                            isControlled: true,
-                            hideDate,
-                            via: 1,
-                            copyIndex: copyNum,
-                            totalCopies: maxCopies,
-                            meds: medsForCopy,
-                            freeTexts: [],
-                            isEmpty: false
-                        });
-                        pages.push({
-                            id: `page-${pageIdCounter++}`,
-                            isControlled: true,
-                            hideDate,
-                            via: 2,
-                            copyIndex: copyNum,
-                            totalCopies: maxCopies,
-                            meds: medsForCopy,
-                            freeTexts: [],
-                            isEmpty: false
-                        });
+                    // Determina tamanho máximo por página
+                    let maxPerPage;
+                    if (separatePrescriptions) {
+                        maxPerPage = 1;
+                    } else if (isControlled) {
+                        maxPerPage = 3;
                     } else {
-                        // Normal
-                        pages.push({
-                            id: `page-${pageIdCounter++}`,
-                            isControlled: false,
-                            hideDate,
-                            via: null,
-                            copyIndex: copyNum,
-                            totalCopies: maxCopies,
-                            meds: medsForCopy,
-                            freeTexts: [],
-                            isEmpty: false
-                        });
+                        maxPerPage = medsForCopy.length; // sem limite para simples
                     }
+
+                    const chunks = chunkArray(medsForCopy, maxPerPage);
+
+                    chunks.forEach(chunk => {
+                        if (isControlled) {
+                            pages.push({
+                                id: `page-${pageIdCounter++}`,
+                                isControlled: true,
+                                hideDate,
+                                via: 1,
+                                copyIndex: copyNum,
+                                totalCopies: maxCopies,
+                                meds: chunk,
+                                freeTexts: [],
+                                isEmpty: false
+                            });
+                            pages.push({
+                                id: `page-${pageIdCounter++}`,
+                                isControlled: true,
+                                hideDate,
+                                via: 2,
+                                copyIndex: copyNum,
+                                totalCopies: maxCopies,
+                                meds: chunk,
+                                freeTexts: [],
+                                isEmpty: false
+                            });
+                        } else {
+                            pages.push({
+                                id: `page-${pageIdCounter++}`,
+                                isControlled: false,
+                                hideDate,
+                                via: null,
+                                copyIndex: copyNum,
+                                totalCopies: maxCopies,
+                                meds: chunk,
+                                freeTexts: [],
+                                isEmpty: false
+                            });
+                        }
+                    });
                 }
             });
 
-            // Páginas de texto livre
-            if (validFreeTexts.length > 0) {
+            // Cada texto livre em uma página separada
+            validFreeTexts.forEach(ft => {
                 pages.push({
                     id: `page-freetext-${pageIdCounter++}`,
                     isControlled: false,
@@ -510,10 +526,10 @@
                     copyIndex: 1,
                     totalCopies: 1,
                     meds: [],
-                    freeTexts: validFreeTexts,
+                    freeTexts: [ft],
                     isEmpty: false
                 });
-            }
+            });
 
             return pages;
         };
@@ -638,11 +654,12 @@
             const [freeTexts, setFreeTexts] = useState([]);
 
             const [showDoctorSettings, setShowDoctorSettings] = useState(false);
+            const [separatePrescriptions, setSeparatePrescriptions] = useState(false);
 
             const clinic = CLINICS[selectedClinicId];
 
             // Gerar páginas com useMemo para evitar recalcular a cada render
-            const pages = useMemo(() => generatePages(medications, freeTexts), [medications, freeTexts]);
+            const pages = useMemo(() => generatePages(medications, freeTexts, separatePrescriptions), [medications, freeTexts, separatePrescriptions]);
 
             // Páginas para impressão (exclui vazias)
             const printPages = useMemo(() => pages.filter(p => !p.isEmpty), [pages]);
@@ -713,8 +730,14 @@
                 }]);
             }, []);
 
-            // Limpar toda a receita
-            const handleClearPrescription = useCallback(() => {
+            // Limpar apenas receita (medicamentos e textos livres)
+            const handleClearContent = useCallback(() => {
+                setMedications([{ id: Date.now(), route: 'Uso Oral', name: '', instructions: '', isControlled: false, hideDate: false, copies: 1 }]);
+                setFreeTexts([]);
+            }, []);
+
+            // Limpar tudo (incluindo dados do paciente)
+            const handleClearAll = useCallback(() => {
                 setPatient({ name: '', cpf: '', address: '' });
                 setMedications([{ id: Date.now(), route: 'Uso Oral', name: '', instructions: '', isControlled: false, hideDate: false, copies: 1 }]);
                 setFreeTexts([]);
@@ -862,30 +885,6 @@
                 doc.save(fileName);
             }, [printPages, doctor, clinic, city, patient]);
 
-            // Enviar por WhatsApp
-            const handleWhatsApp = useCallback(() => {
-                const medList = medications
-                    .filter(m => m.name.trim())
-                    .map((m, i) => `${i + 1}. ${m.name} (${m.route})\n   ${m.instructions}`)
-                    .join('\n\n');
-
-                let msg = `*Prescrição Médica*\n`;
-                msg += `*Dr(a):* ${doctor.name}\n`;
-                msg += `*CRM:* ${doctor.crm}\n`;
-                msg += `*Paciente:* ${patient.name || '---'}\n`;
-                msg += `*Data:* ${formatDate(false)}\n\n`;
-                if (medList) {
-                    msg += `*Medicamentos:*\n${medList}\n\n`;
-                }
-                freeTexts.filter(ft => ft.content.trim()).forEach(ft => {
-                    if (ft.title) msg += `*${ft.title}:*\n`;
-                    msg += `${ft.content}\n\n`;
-                });
-
-                const encoded = encodeURIComponent(msg);
-                window.open(`https://wa.me/?text=${encoded}`, '_blank');
-            }, [medications, freeTexts, doctor, patient]);
-
             // Descrição de cada página para o banner do preview
             const getPageLabel = (page) => {
                 if (page.freeTexts && page.freeTexts.length > 0 && page.meds.length === 0) {
@@ -1026,6 +1025,19 @@
                                     <div className="mb-4">
                                         <MedicationSearch onSelect={handleAddFromSearch} />
                                     </div>
+
+                                    {/* Opção de receita separada */}
+                                    <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl mb-3 transition" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={separatePrescriptions}
+                                            onChange={(e) => setSeparatePrescriptions(e.target.checked)}
+                                            className="w-4 h-4 rounded cursor-pointer accent-blue-600"
+                                        />
+                                        <span className="text-xs font-medium select-none" style={{ color: '#1d1d1f' }}>
+                                            Receita separada por medicamento
+                                        </span>
+                                    </label>
 
                                     <div className="space-y-3">
                                         {medications.map((med, index) => (
@@ -1247,21 +1259,22 @@
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
-                                        onClick={handleWhatsApp}
-                                        disabled={printPages.length === 0}
+                                        onClick={handleClearContent}
                                         className="flex justify-center items-center gap-2 py-3 rounded-full font-medium transition-all text-sm"
-                                        style={{ background: '#25D366', color: '#fff', border: 'none', cursor: printPages.length === 0 ? 'not-allowed' : 'pointer', opacity: printPages.length === 0 ? 0.5 : 1 }}
+                                        style={{ background: '#f5f5f7', color: '#6e6e73', border: '1px solid #e8e8ed', cursor: 'pointer' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#f0f0f2'; e.currentTarget.style.borderColor = '#d2d2d7'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = '#f5f5f7'; e.currentTarget.style.borderColor = '#e8e8ed'; }}
                                     >
-                                        <Icons.WhatsApp /> WhatsApp
+                                        <Icons.Eraser /> Limpar Receita
                                     </button>
                                     <button
-                                        onClick={handleClearPrescription}
+                                        onClick={handleClearAll}
                                         className="flex justify-center items-center gap-2 py-3 rounded-full font-medium transition-all text-sm"
                                         style={{ background: '#f5f5f7', color: '#e34040', border: '1px solid #e8e8ed', cursor: 'pointer' }}
                                         onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#e34040'; }}
                                         onMouseLeave={(e) => { e.currentTarget.style.background = '#f5f5f7'; e.currentTarget.style.borderColor = '#e8e8ed'; }}
                                     >
-                                        <Icons.Eraser /> Limpar Receita
+                                        <Icons.Trash /> Limpar Tudo
                                     </button>
                                 </div>
                             </div>
