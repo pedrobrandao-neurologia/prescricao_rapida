@@ -50,8 +50,8 @@
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- jsPDF para geração de PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <!-- html2pdf.js para geração de PDF (inclui html2canvas + jsPDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 
     <style>
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -165,6 +165,16 @@
             font-size: 10px;
             line-height: 1.4;
         }
+
+        /* Preview responsivo: escala no mobile */
+        @media screen and (max-width: 767px) {
+            .a4-preview {
+                width: 100% !important;
+                min-height: auto !important;
+                padding: 12mm !important;
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -228,6 +238,206 @@
         };
 
         // ========================================
+        // Base CID-10 (Códigos mais comuns em Neurologia)
+        // ========================================
+        const CID10_DATABASE = [
+            { code: 'G20', desc: 'Doença de Parkinson' },
+            { code: 'G20.0', desc: 'Doença de Parkinson primária' },
+            { code: 'G21', desc: 'Parkinsonismo secundário' },
+            { code: 'G24', desc: 'Distonia' },
+            { code: 'G24.0', desc: 'Distonia induzida por drogas' },
+            { code: 'G24.1', desc: 'Distonia familiar idiopática' },
+            { code: 'G25', desc: 'Outros transtornos extrapiramidais e dos movimentos' },
+            { code: 'G25.0', desc: 'Tremor essencial' },
+            { code: 'G25.1', desc: 'Tremor induzido por drogas' },
+            { code: 'G25.3', desc: 'Mioclonia' },
+            { code: 'G25.5', desc: 'Coreia induzida por drogas' },
+            { code: 'G25.8', desc: 'Outros transtornos extrapiramidais e dos movimentos especificados' },
+            { code: 'G30', desc: 'Doença de Alzheimer' },
+            { code: 'G30.0', desc: 'Doença de Alzheimer de início precoce' },
+            { code: 'G30.1', desc: 'Doença de Alzheimer de início tardio' },
+            { code: 'G30.8', desc: 'Outras formas de doença de Alzheimer' },
+            { code: 'G31', desc: 'Outras doenças degenerativas do sistema nervoso' },
+            { code: 'G31.0', desc: 'Atrofia cerebral circunscrita (demência frontotemporal)' },
+            { code: 'G31.8', desc: 'Outras doenças degenerativas especificadas do sistema nervoso' },
+            { code: 'G35', desc: 'Esclerose múltipla' },
+            { code: 'G36', desc: 'Outras desmielinizações disseminadas agudas' },
+            { code: 'G37', desc: 'Outras doenças desmielinizantes do SNC' },
+            { code: 'G40', desc: 'Epilepsia' },
+            { code: 'G40.0', desc: 'Epilepsia e síndromes epilépticas idiopáticas relacionadas a localização (focal)' },
+            { code: 'G40.1', desc: 'Epilepsia e síndromes epilépticas sintomáticas relacionadas a localização (focal)' },
+            { code: 'G40.2', desc: 'Epilepsia e síndromes epilépticas idiopáticas generalizadas' },
+            { code: 'G40.3', desc: 'Epilepsia e síndromes epilépticas sintomáticas generalizadas' },
+            { code: 'G40.5', desc: 'Síndromes epilépticas especiais' },
+            { code: 'G40.8', desc: 'Outras epilepsias' },
+            { code: 'G41', desc: 'Estado de mal epiléptico' },
+            { code: 'G43', desc: 'Enxaqueca' },
+            { code: 'G43.0', desc: 'Enxaqueca sem aura (enxaqueca comum)' },
+            { code: 'G43.1', desc: 'Enxaqueca com aura (enxaqueca clássica)' },
+            { code: 'G43.2', desc: 'Estado de mal enxaquecoso' },
+            { code: 'G43.3', desc: 'Enxaqueca complicada' },
+            { code: 'G43.8', desc: 'Outras formas de enxaqueca' },
+            { code: 'G43.9', desc: 'Enxaqueca, sem especificação' },
+            { code: 'G44', desc: 'Outras síndromes de cefaleia' },
+            { code: 'G44.0', desc: 'Cefaleia tipo cluster (em salvas)' },
+            { code: 'G44.2', desc: 'Cefaleia tensional' },
+            { code: 'G44.4', desc: 'Cefaleia induzida por drogas, não classificada em outra parte' },
+            { code: 'G47', desc: 'Distúrbios do sono' },
+            { code: 'G47.0', desc: 'Insônia' },
+            { code: 'G47.3', desc: 'Apneia do sono' },
+            { code: 'G47.4', desc: 'Narcolepsia e cataplexia' },
+            { code: 'G50', desc: 'Transtornos do nervo trigêmeo' },
+            { code: 'G50.0', desc: 'Neuralgia do trigêmeo' },
+            { code: 'G51', desc: 'Transtornos do nervo facial' },
+            { code: 'G51.0', desc: 'Paralisia de Bell' },
+            { code: 'G51.3', desc: 'Espasmo hemifacial clônico' },
+            { code: 'G54', desc: 'Transtornos das raízes e plexos nervosos' },
+            { code: 'G56', desc: 'Mononeuropatias do membro superior' },
+            { code: 'G56.0', desc: 'Síndrome do túnel do carpo' },
+            { code: 'G57', desc: 'Mononeuropatias do membro inferior' },
+            { code: 'G60', desc: 'Neuropatia hereditária e idiopática' },
+            { code: 'G61', desc: 'Polineuropatia inflamatória' },
+            { code: 'G61.0', desc: 'Síndrome de Guillain-Barré' },
+            { code: 'G62', desc: 'Outras polineuropatias' },
+            { code: 'G62.1', desc: 'Polineuropatia alcoólica' },
+            { code: 'G62.9', desc: 'Polineuropatia, sem especificação' },
+            { code: 'G70', desc: 'Miastenia gravis e outros transtornos neuromusculares' },
+            { code: 'G70.0', desc: 'Miastenia gravis' },
+            { code: 'G71', desc: 'Transtornos primários dos músculos' },
+            { code: 'G71.0', desc: 'Distrofia muscular' },
+            { code: 'G80', desc: 'Paralisia cerebral' },
+            { code: 'G91', desc: 'Hidrocefalia' },
+            { code: 'G91.0', desc: 'Hidrocefalia comunicante' },
+            { code: 'G91.1', desc: 'Hidrocefalia obstrutiva' },
+            { code: 'G91.2', desc: 'Hidrocefalia de pressão normal' },
+            { code: 'G93.3', desc: 'Síndrome da fadiga pós-viral (fadiga crônica)' },
+            { code: 'G93.4', desc: 'Encefalopatia não especificada' },
+            { code: 'I63', desc: 'Infarto cerebral' },
+            { code: 'I63.9', desc: 'Infarto cerebral, não especificado' },
+            { code: 'I64', desc: 'Acidente vascular cerebral (AVC), não especificado' },
+            { code: 'I67', desc: 'Outras doenças cerebrovasculares' },
+            { code: 'I67.1', desc: 'Aneurisma cerebral, sem ruptura' },
+            { code: 'I69', desc: 'Sequelas de doenças cerebrovasculares' },
+            { code: 'R20', desc: 'Distúrbios da sensibilidade cutânea' },
+            { code: 'R25', desc: 'Movimentos involuntários anormais' },
+            { code: 'R25.1', desc: 'Tremor não especificado' },
+            { code: 'R25.2', desc: 'Cãibra e espasmo' },
+            { code: 'R26', desc: 'Anormalidades da marcha e da mobilidade' },
+            { code: 'R27', desc: 'Outros distúrbios da coordenação' },
+            { code: 'R29.8', desc: 'Outros sintomas e sinais relativos ao sistema nervoso e musculoesquelético' },
+            { code: 'R42', desc: 'Tontura e instabilidade' },
+            { code: 'R47', desc: 'Distúrbios da fala' },
+            { code: 'R47.0', desc: 'Disfasia e afasia' },
+            { code: 'R51', desc: 'Cefaleia' },
+            { code: 'R56', desc: 'Convulsões, não classificadas em outra parte' },
+            { code: 'F03', desc: 'Demência, não especificada' },
+            { code: 'F05', desc: 'Delirium, não induzido por álcool ou outras substâncias psicoativas' },
+            { code: 'F06', desc: 'Outros transtornos mentais devidos a lesão e disfunção cerebral' },
+            { code: 'M54', desc: 'Dorsalgia' },
+            { code: 'M54.2', desc: 'Cervicalgia' },
+            { code: 'M54.5', desc: 'Dor lombar baixa (lombalgia)' },
+            { code: 'M79.7', desc: 'Fibromialgia' },
+            { code: 'G12', desc: 'Atrofia muscular espinal e síndromes correlatas' },
+            { code: 'G12.2', desc: 'Doença do neurônio motor (ELA)' },
+        ];
+
+        const searchCID10 = (query) => {
+            if (!query || query.length < 2) return [];
+            const q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return CID10_DATABASE.filter(item => {
+                const searchStr = `${item.code} ${item.desc}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return searchStr.includes(q);
+            }).slice(0, 10);
+        };
+
+        // ========================================
+        // Componente de Busca CID-10 (Typeahead)
+        // ========================================
+        const CID10Search = ({ onSelect }) => {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState([]);
+            const [showDropdown, setShowDropdown] = useState(false);
+            const inputRef = React.useRef(null);
+            const dropdownRef = React.useRef(null);
+
+            useEffect(() => {
+                if (query.length >= 2) {
+                    const found = searchCID10(query);
+                    setResults(found);
+                    setShowDropdown(found.length > 0);
+                } else {
+                    setResults([]);
+                    setShowDropdown(false);
+                }
+            }, [query]);
+
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(e.target) &&
+                        inputRef.current && !inputRef.current.contains(e.target)) {
+                        setShowDropdown(false);
+                    }
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, []);
+
+            const handleSelect = (item) => {
+                onSelect(item);
+                setQuery('');
+                setResults([]);
+                setShowDropdown(false);
+            };
+
+            return (
+                <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#86868b' }}>
+                            <Icons.Search />
+                        </div>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="Buscar CID-10 (ex: G43, enxaqueca...)"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
+                            className="w-full p-3 pl-10 rounded-xl outline-none text-sm"
+                            style={{ border: '1px solid #d2d2d7', color: '#1d1d1f', background: '#fbfbfd' }}
+                        />
+                    </div>
+                    {showDropdown && (
+                        <div
+                            ref={dropdownRef}
+                            style={{
+                                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                                background: '#fff', border: '1px solid #d2d2d7', borderRadius: '12px',
+                                marginTop: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                                maxHeight: '220px', overflowY: 'auto'
+                            }}
+                        >
+                            {results.map(item => (
+                                <button
+                                    key={item.code}
+                                    onClick={() => handleSelect(item)}
+                                    className="w-full text-left px-4 py-3 transition-colors"
+                                    style={{ borderBottom: '1px solid #f0f0f2', color: '#1d1d1f' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f7'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-sm px-2 py-0.5 rounded-lg" style={{ background: '#f0f0f2', color: '#0071e3', fontFamily: 'monospace' }}>{item.code}</span>
+                                        <span className="text-sm">{item.desc}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ========================================
         // Templates / Kits de Acesso Rápido
         // ========================================
         const TEMPLATE_KITS = [
@@ -254,18 +464,24 @@
             },
         ];
 
-        // Helper: data formatada
-        const formatDate = (hideDate) => {
+        // Helper: data formatada (suporta data personalizada para receitas pós-datadas)
+        const formatDate = (hideDate, customDateStr) => {
             if (hideDate) return "_____ de ________________ de 20____";
-            const date = new Date();
             const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            if (customDateStr) {
+                const [year, month, day] = customDateStr.split('-').map(Number);
+                if (year && month && day) {
+                    return `${day} de ${months[month - 1]} de ${year}`;
+                }
+            }
+            const date = new Date();
             return `${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
         };
 
         // ========================================
         // Componente de Página de Prescrição (A4)
         // ========================================
-        const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, via, hideDate, doctor, clinic, city, patient, forPrint }) => {
+        const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, via, hideDate, doctor, clinic, city, patient, forPrint, customDate }) => {
             const pageClass = forPrint ? "a4-page" : "a4-preview";
 
             return (
@@ -367,7 +583,7 @@
                                 <p style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{doctor.crm}</p>
                             </div>
                             <p style={{ fontSize: '13px', color: '#6e6e73', marginTop: '16px' }}>
-                                {city}, {formatDate(hideDate)}
+                                {city}, {formatDate(hideDate, customDate)}
                             </p>
                         </div>
 
@@ -631,15 +847,23 @@
         // ========================================
         // App Principal
         // ========================================
+        // Helper: carregar do localStorage com fallback
+        const loadFromStorage = (key, fallback) => {
+            try {
+                const saved = localStorage.getItem(key);
+                return saved ? JSON.parse(saved) : fallback;
+            } catch { return fallback; }
+        };
+
         const App = () => {
-            const [doctor, setDoctor] = useState({
+            const [doctor, setDoctor] = useState(() => loadFromStorage('pr_doctor', {
                 name: 'Dr. Pedro Renato P. Brandão',
                 crm: 'CRM-DF 18853, RQE 11791',
                 specialty: 'Médico Neurologista'
-            });
+            }));
 
-            const [selectedClinicId, setSelectedClinicId] = useState('EIXO');
-            const [city, setCity] = useState('Brasília');
+            const [selectedClinicId, setSelectedClinicId] = useState(() => loadFromStorage('pr_clinicId', 'EIXO'));
+            const [city, setCity] = useState(() => loadFromStorage('pr_city', 'Brasília'));
 
             const [patient, setPatient] = useState({
                 name: '',
@@ -656,7 +880,87 @@
             const [showDoctorSettings, setShowDoctorSettings] = useState(false);
             const [separatePrescriptions, setSeparatePrescriptions] = useState(false);
 
+            // Data personalizada para receitas pós-datadas
+            const [customDate, setCustomDate] = useState('');
+
+            // Histórico de pacientes
+            const [patientHistory, setPatientHistory] = useState(() => loadFromStorage('pr_patientHistory', []));
+            const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+            const [patientSearchFilter, setPatientSearchFilter] = useState('');
+            const patientInputRef = React.useRef(null);
+            const patientDropdownRef = React.useRef(null);
+
             const clinic = CLINICS[selectedClinicId];
+
+            // Auto-save: dados do médico e configurações no localStorage
+            useEffect(() => {
+                localStorage.setItem('pr_doctor', JSON.stringify(doctor));
+            }, [doctor]);
+            useEffect(() => {
+                localStorage.setItem('pr_clinicId', JSON.stringify(selectedClinicId));
+            }, [selectedClinicId]);
+            useEffect(() => {
+                localStorage.setItem('pr_city', JSON.stringify(city));
+            }, [city]);
+
+            // Auto-save: rascunho da receita atual
+            useEffect(() => {
+                const draft = { patient, medications, freeTexts, separatePrescriptions, customDate };
+                localStorage.setItem('pr_draft', JSON.stringify(draft));
+            }, [patient, medications, freeTexts, separatePrescriptions, customDate]);
+
+            // Restaurar rascunho ao abrir
+            useEffect(() => {
+                try {
+                    const draft = JSON.parse(localStorage.getItem('pr_draft'));
+                    if (draft) {
+                        if (draft.patient && draft.patient.name) setPatient(draft.patient);
+                        if (draft.medications && draft.medications.length > 0) setMedications(draft.medications);
+                        if (draft.freeTexts && draft.freeTexts.length > 0) setFreeTexts(draft.freeTexts);
+                        if (draft.separatePrescriptions) setSeparatePrescriptions(draft.separatePrescriptions);
+                        if (draft.customDate) setCustomDate(draft.customDate);
+                    }
+                } catch {}
+            }, []);
+
+            // Salvar paciente no histórico
+            const savePatientToHistory = useCallback(() => {
+                if (!patient.name || patient.name.trim().length < 2) return;
+                setPatientHistory(prev => {
+                    const filtered = prev.filter(p => p.name.toLowerCase() !== patient.name.trim().toLowerCase());
+                    const updated = [{ name: patient.name.trim(), cpf: patient.cpf.trim(), address: patient.address.trim(), lastUsed: Date.now() }, ...filtered].slice(0, 50);
+                    localStorage.setItem('pr_patientHistory', JSON.stringify(updated));
+                    return updated;
+                });
+            }, [patient]);
+
+            // Fechar dropdown do paciente ao clicar fora
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target) &&
+                        patientInputRef.current && !patientInputRef.current.contains(e.target)) {
+                        setShowPatientDropdown(false);
+                    }
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, []);
+
+            // Filtrar histórico de pacientes
+            const filteredPatientHistory = useMemo(() => {
+                if (!patientSearchFilter || patientSearchFilter.length < 1) return patientHistory;
+                const q = patientSearchFilter.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return patientHistory.filter(p => {
+                    const name = p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const cpf = (p.cpf || '').toLowerCase();
+                    return name.includes(q) || cpf.includes(q);
+                });
+            }, [patientSearchFilter, patientHistory]);
+
+            const selectPatientFromHistory = useCallback((p) => {
+                setPatient({ name: p.name, cpf: p.cpf || '', address: p.address || '' });
+                setShowPatientDropdown(false);
+            }, []);
 
             // Gerar páginas com useMemo para evitar recalcular a cada render
             const pages = useMemo(() => generatePages(medications, freeTexts, separatePrescriptions), [medications, freeTexts, separatePrescriptions]);
@@ -704,6 +1008,7 @@
             }, []);
 
             const handlePrint = () => {
+                savePatientToHistory();
                 window.print();
             };
 
@@ -730,10 +1035,36 @@
                 }]);
             }, []);
 
+            // Inserir CID-10 no último texto livre (ou criar um atestado com o CID)
+            const handleInsertCID = useCallback((cidItem) => {
+                const cidText = `${cidItem.code} - ${cidItem.desc}`;
+                setFreeTexts(prev => {
+                    // Se já existe um texto livre, insere o CID nele substituindo "CID: ________" ou adicionando ao final
+                    if (prev.length > 0) {
+                        const lastIdx = prev.length - 1;
+                        const lastFt = prev[lastIdx];
+                        let newContent = lastFt.content;
+                        if (newContent.includes('CID: ________')) {
+                            newContent = newContent.replace('CID: ________', `CID: ${cidText}`);
+                        } else {
+                            newContent += `\n\nCID: ${cidText}`;
+                        }
+                        return prev.map((ft, idx) => idx === lastIdx ? { ...ft, content: newContent } : ft);
+                    }
+                    // Se não existe, cria atestado padrão com o CID
+                    return [...prev, {
+                        id: Date.now(),
+                        title: 'Atestado Médico',
+                        content: `Atesto para os devidos fins que o(a) paciente acima identificado(a) esteve sob meus cuidados profissionais na data de hoje, necessitando de afastamento de suas atividades por ______ (______) dia(s), a partir desta data.\n\nCID: ${cidText}`
+                    }];
+                });
+            }, []);
+
             // Limpar apenas receita (medicamentos e textos livres)
             const handleClearContent = useCallback(() => {
                 setMedications([{ id: Date.now(), route: 'Uso Oral', name: '', instructions: '', isControlled: false, hideDate: false, copies: 1 }]);
                 setFreeTexts([]);
+                setCustomDate('');
             }, []);
 
             // Limpar tudo (incluindo dados do paciente)
@@ -741,149 +1072,59 @@
                 setPatient({ name: '', cpf: '', address: '' });
                 setMedications([{ id: Date.now(), route: 'Uso Oral', name: '', instructions: '', isControlled: false, hideDate: false, copies: 1 }]);
                 setFreeTexts([]);
+                setCustomDate('');
+                localStorage.removeItem('pr_draft');
             }, []);
 
-            // Baixar PDF com jsPDF
-            const handleDownloadPDF = useCallback(() => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                const pageWidth = 210;
-                const margin = 20;
-                const contentWidth = pageWidth - 2 * margin;
-                let isFirstPage = true;
+            // Baixar PDF com html2pdf.js (captura HTML idêntico ao preview, com logos e formatação)
+            const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+            const handleDownloadPDF = useCallback(async () => {
+                if (isGeneratingPDF) return;
+                setIsGeneratingPDF(true);
+                savePatientToHistory();
+                try {
+                    const printArea = document.querySelector('.print-area');
+                    // Temporariamente torna visível para captura (fora da tela)
+                    const originalStyle = printArea.getAttribute('style') || '';
+                    printArea.style.cssText = 'display: block !important; position: fixed; left: -9999px; top: 0; width: 210mm;';
 
-                printPages.forEach((page) => {
-                    if (!isFirstPage) doc.addPage();
-                    isFirstPage = false;
+                    const today = new Date();
+                    const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                    const patientSlug = (patient.name || 'paciente').trim().replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const fileName = `prescricao_${patientSlug}_${dateStr}.pdf`;
 
-                    let y = margin;
+                    const opt = {
+                        margin: 0,
+                        filename: fileName,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak: { mode: ['css'], before: '.a4-page-break' }
+                    };
 
-                    // Cabeçalho
-                    doc.setFontSize(14);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(doctor.name, pageWidth / 2, y, { align: 'center' });
-                    y += 6;
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'normal');
-                    doc.text(`${doctor.specialty} | ${doctor.crm}`, pageWidth / 2, y, { align: 'center' });
-                    y += 5;
-                    doc.setFontSize(9);
-                    doc.text(clinic.name, pageWidth / 2, y, { align: 'center' });
-                    y += 4;
-                    const addressLines = clinic.address.split('\n');
-                    addressLines.forEach(line => {
-                        doc.text(line.trim(), pageWidth / 2, y, { align: 'center' });
-                        y += 3.5;
-                    });
-                    doc.text(`Tel: ${clinic.phone}`, pageWidth / 2, y, { align: 'center' });
-                    y += 6;
-
-                    // Linha separadora
-                    doc.setDrawColor(210, 210, 215);
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 8;
-
-                    // Título controlado
-                    if (page.isControlled) {
-                        doc.setFontSize(13);
-                        doc.setFont(undefined, 'bold');
-                        doc.text('RECEITUÁRIO DE CONTROLE ESPECIAL', pageWidth / 2, y, { align: 'center' });
-                        y += 6;
-                        doc.setFontSize(10);
-                        doc.setFont(undefined, 'normal');
-                        doc.text(
-                            page.via === 1 ? '1ª VIA - RETENÇÃO DA FARMÁCIA' : '2ª VIA - ORIENTAÇÃO AO PACIENTE',
-                            pageWidth / 2, y, { align: 'center' }
-                        );
-                        y += 10;
-                    }
-
-                    // Paciente
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text('Paciente: ', margin, y);
-                    doc.setFont(undefined, 'normal');
-                    doc.text(patient.name || '___________________________', margin + doc.getTextWidth('Paciente: '), y);
-                    y += 6;
-                    if (patient.cpf) {
-                        doc.setFont(undefined, 'bold');
-                        doc.text('CPF: ', margin, y);
-                        doc.setFont(undefined, 'normal');
-                        doc.text(patient.cpf, margin + doc.getTextWidth('CPF: '), y);
-                        y += 6;
-                    }
-                    if (page.isControlled && patient.address) {
-                        doc.setFont(undefined, 'bold');
-                        doc.text('Endereço: ', margin, y);
-                        doc.setFont(undefined, 'normal');
-                        doc.text(patient.address, margin + doc.getTextWidth('Endereço: '), y);
-                        y += 6;
-                    }
-                    y += 6;
-
-                    // Medicamentos
-                    page.meds.forEach((med, idx) => {
-                        doc.setFontSize(12);
-                        doc.setFont(undefined, 'bold');
-                        doc.text(`${idx + 1}. ${med.name}`, margin + 4, y);
-                        y += 5;
-                        doc.setFontSize(10);
-                        doc.setFont(undefined, 'italic');
-                        doc.setTextColor(0, 113, 227);
-                        doc.text(med.route, margin + 12, y);
-                        doc.setTextColor(0, 0, 0);
-                        y += 5;
-                        if (med.instructions) {
-                            doc.setFont(undefined, 'normal');
-                            const instrLines = doc.splitTextToSize(med.instructions, contentWidth - 12);
-                            instrLines.forEach(line => {
-                                doc.text(line, margin + 12, y);
-                                y += 4.5;
-                            });
+                    // Adiciona marcadores de quebra de página antes de cada .a4-page (exceto o primeiro)
+                    const a4Pages = printArea.querySelectorAll('.a4-page');
+                    const breakMarkers = [];
+                    a4Pages.forEach((page, idx) => {
+                        if (idx > 0) {
+                            const marker = document.createElement('div');
+                            marker.className = 'a4-page-break';
+                            page.parentNode.insertBefore(marker, page);
+                            breakMarkers.push(marker);
                         }
-                        y += 4;
                     });
 
-                    // Texto livre
-                    if (page.freeTexts && page.freeTexts.length > 0) {
-                        page.freeTexts.forEach(ft => {
-                            if (ft.title) {
-                                doc.setFontSize(12);
-                                doc.setFont(undefined, 'bold');
-                                doc.text(ft.title.toUpperCase(), pageWidth / 2, y, { align: 'center' });
-                                y += 8;
-                            }
-                            doc.setFontSize(11);
-                            doc.setFont(undefined, 'normal');
-                            const ftLines = doc.splitTextToSize(ft.content, contentWidth);
-                            ftLines.forEach(line => {
-                                doc.text(line, margin, y);
-                                y += 5;
-                            });
-                            y += 4;
-                        });
-                    }
+                    await html2pdf().set(opt).from(printArea).save();
 
-                    // Assinatura no rodapé
-                    const footerY = 260;
-                    doc.setDrawColor(29, 29, 31);
-                    doc.line(pageWidth / 2 - 40, footerY, pageWidth / 2 + 40, footerY);
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(doctor.name, pageWidth / 2, footerY + 5, { align: 'center' });
-                    doc.setFont(undefined, 'normal');
-                    doc.setFontSize(9);
-                    doc.text(doctor.crm, pageWidth / 2, footerY + 9, { align: 'center' });
-                    doc.text(`${city}, ${formatDate(page.hideDate)}`, pageWidth / 2, footerY + 15, { align: 'center' });
-                });
-
-                // Nome do arquivo com paciente e data
-                const today = new Date();
-                const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-                const patientSlug = (patient.name || 'paciente').trim().replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                const fileName = `prescricao_${patientSlug}_${dateStr}.pdf`;
-                doc.save(fileName);
-            }, [printPages, doctor, clinic, city, patient]);
+                    // Limpa marcadores e restaura estilo
+                    breakMarkers.forEach(m => m.remove());
+                    printArea.style.cssText = originalStyle;
+                } catch (err) {
+                    console.error('Erro ao gerar PDF:', err);
+                } finally {
+                    setIsGeneratingPDF(false);
+                }
+            }, [printPages, patient, isGeneratingPDF]);
 
             // Descrição de cada página para o banner do preview
             const getPageLabel = (page) => {
@@ -900,10 +1141,10 @@
 
             return (
                 <React.Fragment>
-                    <div className="flex h-screen overflow-hidden no-print">
+                    <div className="flex flex-col md:flex-row md:h-screen md:overflow-hidden no-print">
 
                         {/* COLUNA ESQUERDA: INTERFACE DE CONTROLE */}
-                        <div className="w-full md:w-[440px] flex flex-col h-full border-r" style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)', borderColor: '#d2d2d7' }}>
+                        <div className="w-full md:w-[440px] flex flex-col md:h-full border-b md:border-b-0 md:border-r shrink-0" style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)', borderColor: '#d2d2d7' }}>
 
                             {/* Header */}
                             <div className="px-6 py-5 flex justify-between items-center" style={{ borderBottom: '1px solid #d2d2d7' }}>
@@ -957,6 +1198,30 @@
                                             <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>Cidade atual</label>
                                             <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full text-sm p-2.5 rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', background: '#fff' }} />
                                         </div>
+                                        <div>
+                                            <label className="block text-xs mb-1.5" style={{ color: '#6e6e73' }}>Data personalizada (pós-datada)</label>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="date"
+                                                    value={customDate}
+                                                    onChange={(e) => setCustomDate(e.target.value)}
+                                                    className="flex-1 text-sm p-2.5 rounded-xl outline-none"
+                                                    style={{ border: '1px solid #d2d2d7', background: '#fff' }}
+                                                />
+                                                {customDate && (
+                                                    <button
+                                                        onClick={() => setCustomDate('')}
+                                                        className="text-xs px-3 py-2.5 rounded-xl transition-colors"
+                                                        style={{ background: '#f5f5f7', color: '#e34040', border: '1px solid #e8e8ed' }}
+                                                    >
+                                                        Usar Hoje
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <p className="text-xs mt-1" style={{ color: '#86868b' }}>
+                                                {customDate ? `Data na receita: ${formatDate(false, customDate)}` : 'Usando a data de hoje'}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
 
@@ -964,13 +1229,57 @@
                                 <div>
                                     <h3 className="text-xs font-semibold uppercase mb-3" style={{ color: '#6e6e73', letterSpacing: '0.06em' }}>Paciente</h3>
                                     <div className="space-y-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Nome do Paciente"
-                                            value={patient.name}
-                                            onChange={(e) => setPatient({...patient, name: e.target.value})}
-                                            className="w-full p-3 rounded-xl outline-none font-medium text-sm" style={{ border: '1px solid #d2d2d7', color: '#1d1d1f' }}
-                                        />
+                                        {/* Nome com autocomplete de histórico */}
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                ref={patientInputRef}
+                                                type="text"
+                                                placeholder="Nome do Paciente"
+                                                value={patient.name}
+                                                onChange={(e) => {
+                                                    setPatient({...patient, name: e.target.value});
+                                                    setPatientSearchFilter(e.target.value);
+                                                    if (e.target.value.length >= 1 && patientHistory.length > 0) {
+                                                        setShowPatientDropdown(true);
+                                                    }
+                                                }}
+                                                onFocus={() => {
+                                                    if (patientHistory.length > 0) {
+                                                        setPatientSearchFilter(patient.name);
+                                                        setShowPatientDropdown(true);
+                                                    }
+                                                }}
+                                                className="w-full p-3 rounded-xl outline-none font-medium text-sm" style={{ border: '1px solid #d2d2d7', color: '#1d1d1f' }}
+                                            />
+                                            {showPatientDropdown && filteredPatientHistory.length > 0 && (
+                                                <div
+                                                    ref={patientDropdownRef}
+                                                    style={{
+                                                        position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                                                        background: '#fff', border: '1px solid #d2d2d7', borderRadius: '12px',
+                                                        marginTop: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                                                        maxHeight: '200px', overflowY: 'auto'
+                                                    }}
+                                                >
+                                                    <div className="px-3 py-2" style={{ borderBottom: '1px solid #f0f0f2' }}>
+                                                        <span className="text-xs font-semibold uppercase" style={{ color: '#86868b', letterSpacing: '0.04em' }}>Pacientes Recentes</span>
+                                                    </div>
+                                                    {filteredPatientHistory.map((p, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => selectPatientFromHistory(p)}
+                                                            className="w-full text-left px-4 py-2.5 transition-colors"
+                                                            style={{ borderBottom: '1px solid #f0f0f2', color: '#1d1d1f' }}
+                                                            onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f7'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                                        >
+                                                            <span className="font-medium text-sm">{p.name}</span>
+                                                            {p.cpf && <span className="text-xs ml-2" style={{ color: '#86868b' }}>CPF: {p.cpf}</span>}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         <input
                                             type="text"
                                             placeholder="CPF do Paciente"
@@ -1007,6 +1316,10 @@
                                                 {tpl.label}
                                             </button>
                                         ))}
+                                    </div>
+                                    {/* Busca CID-10 */}
+                                    <div className="mt-3">
+                                        <CID10Search onSelect={handleInsertCID} />
                                     </div>
                                 </div>
 
@@ -1242,11 +1555,11 @@
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         onClick={handleDownloadPDF}
-                                        disabled={printPages.length === 0}
+                                        disabled={printPages.length === 0 || isGeneratingPDF}
                                         className="apple-btn flex justify-center items-center gap-2"
                                         style={{ fontSize: '14px', fontWeight: '500', padding: '12px 16px' }}
                                     >
-                                        <Icons.Download /> Baixar PDF
+                                        <Icons.Download /> {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
                                     </button>
                                     <button
                                         onClick={handlePrint}
@@ -1281,7 +1594,7 @@
                         </div>
 
                         {/* COLUNA DIREITA: PREVIEW */}
-                        <div className="flex-1 overflow-y-auto p-10 hide-scrollbar" style={{ background: '#f5f5f7' }}>
+                        <div className="flex-1 overflow-y-auto p-4 md:p-10 hide-scrollbar" style={{ background: '#f5f5f7' }}>
                             <div className="max-w-4xl mx-auto space-y-8">
 
                                 <div className="p-4 rounded-2xl text-sm flex items-start gap-3" style={{ background: '#fbfbfd', border: '1px solid #d2d2d7', color: '#1d1d1f' }}>
@@ -1309,6 +1622,7 @@
                                             clinic={clinic}
                                             city={city}
                                             patient={patient}
+                                            customDate={customDate}
                                             forPrint={false}
                                         />
                                     </div>
@@ -1334,6 +1648,7 @@
                                 clinic={clinic}
                                 city={city}
                                 patient={patient}
+                                customDate={customDate}
                                 forPrint={true}
                             />
                         ))}
