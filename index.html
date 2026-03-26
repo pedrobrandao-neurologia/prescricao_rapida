@@ -1282,73 +1282,56 @@
                 localStorage.removeItem('pr_draft');
             }, []);
 
-            // Baixar PDF com html2pdf.js (captura HTML idêntico ao preview, com logos e formatação)
-            // Clona o conteúdo em um container temporário para evitar conflito com display:none da .print-area
+            // Baixar PDF com html2pdf.js
+            // Captura cada página de preview (.a4-preview) individualmente e monta o PDF
             const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
             const handleDownloadPDF = useCallback(async () => {
                 if (isGeneratingPDF) return;
                 setIsGeneratingPDF(true);
                 savePatientToHistory();
                 try {
-                    const printArea = document.querySelector('.print-area');
-
-                    // Cria container temporário visível (fora da tela) com clone do conteúdo
-                    const tempContainer = document.createElement('div');
-                    tempContainer.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 210mm; background: white; z-index: -1;';
-                    tempContainer.innerHTML = printArea.innerHTML;
-                    document.body.appendChild(tempContainer);
-
-                    // Aguarda imagens carregarem no clone
-                    const images = tempContainer.querySelectorAll('img');
-                    if (images.length > 0) {
-                        await Promise.all(Array.from(images).map(img =>
-                            img.complete ? Promise.resolve() : new Promise(resolve => {
-                                img.onload = resolve;
-                                img.onerror = resolve;
-                            })
-                        ));
-                    }
+                    // Coleta todas as páginas de preview visíveis na tela
+                    const previewPages = document.querySelectorAll('.no-print .a4-preview');
+                    if (previewPages.length === 0) return;
 
                     const today = new Date();
                     const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
                     const patientSlug = (patient.name || 'paciente').trim().replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     const fileName = `prescricao_${patientSlug}_${dateStr}.pdf`;
 
-                    const opt = {
+                    const baseOpt = {
                         margin: 0,
-                        filename: fileName,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                        pagebreak: { mode: ['css'], before: '.a4-page-break' }
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
 
-                    // Adiciona marcadores de quebra de página antes de cada .a4-page (exceto o primeiro)
-                    const a4Pages = tempContainer.querySelectorAll('.a4-page');
-                    a4Pages.forEach((page, idx) => {
-                        if (idx > 0) {
-                            const marker = document.createElement('div');
-                            marker.className = 'a4-page-break';
-                            page.parentNode.insertBefore(marker, page);
-                        }
-                    });
+                    // Gera a primeira página para obter o objeto jsPDF
+                    const firstPage = previewPages[0];
+                    const worker = html2pdf().set(baseOpt).from(firstPage);
+                    const pdf = await worker.toPdf().get('pdf');
 
-                    // Gera PDF como blob e abre em nova aba
-                    const pdfBlob = await html2pdf().set(opt).from(tempContainer).outputPdf('blob');
+                    // Adiciona as demais páginas
+                    for (let i = 1; i < previewPages.length; i++) {
+                        const canvas = await html2pdf().set(baseOpt).from(previewPages[i]).toCanvas();
+                        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = pdf.internal.pageSize.getHeight();
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                    }
+
+                    // Gera blob, abre em nova aba e faz download
+                    const pdfBlob = pdf.output('blob');
                     const blobUrl = URL.createObjectURL(pdfBlob);
                     window.open(blobUrl, '_blank');
 
-                    // Também oferece download automático
                     const link = document.createElement('a');
                     link.href = blobUrl;
                     link.download = fileName;
                     link.click();
 
-                    // Limpa após breve delay (para a aba ter tempo de carregar)
                     setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-
-                    // Remove container temporário
-                    document.body.removeChild(tempContainer);
                 } catch (err) {
                     console.error('Erro ao gerar PDF:', err);
                 } finally {
