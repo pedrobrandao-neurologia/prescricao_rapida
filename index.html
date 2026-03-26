@@ -492,7 +492,154 @@
         // ========================================
         const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, via, hideDate, doctor, clinic, city, patient, forPrint, customDate }) => {
             const pageClass = forPrint ? "a4-page" : "a4-preview";
+            const bx = '1px solid #1d1d1f'; // borda padrão ANVISA
 
+            // Extrai UF da clínica a partir do address (ex: "Brasília – DF" => "DF")
+            const clinicUF = (() => {
+                const match = clinic.address.match(/\b([A-Z]{2})\b/);
+                return match ? match[1] : '';
+            })();
+            // Extrai CRM número e UF do texto do doctor.crm
+            const crmParts = (() => {
+                const match = doctor.crm.match(/CRM[- ]?([A-Z]{2})\s*(\d+)/i);
+                return match ? { uf: match[1].toUpperCase(), num: match[2] } : { uf: '', num: doctor.crm };
+            })();
+
+            // ===== LAYOUT CONTROLADO (ANVISA) =====
+            if (isControlled) {
+                return (
+                    <div className={pageClass} style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '11px', color: '#1d1d1f', lineHeight: '1.4' }}>
+                        {/* ====== SEÇÃO 1: IDENTIFICAÇÃO DO EMITENTE (topo) ====== */}
+                        <div style={{ border: bx, padding: '10px 12px', marginBottom: '0' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                                <p style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                    Receituário de Controle Especial
+                                </p>
+                                <p style={{ fontSize: '10px', fontWeight: '600', color: '#6e6e73', marginTop: '2px' }}>
+                                    {via === 1 ? "1ª VIA – RETENÇÃO DA FARMÁCIA" : "2ª VIA – ORIENTAÇÃO AO PACIENTE"}
+                                </p>
+                            </div>
+                            <div style={{ borderTop: bx, paddingTop: '8px' }}>
+                                <p style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', color: '#6e6e73', letterSpacing: '0.06em', marginBottom: '6px' }}>
+                                    Identificação do Emitente
+                                </p>
+                                {clinic.logo && (
+                                    <img src={clinic.logo} alt={clinic.name} style={{ maxHeight: '50px', marginBottom: '6px', display: 'block' }} />
+                                )}
+                                <p style={{ fontWeight: '700', fontSize: '12px' }}>{doctor.name}</p>
+                                <p style={{ fontSize: '10px', color: '#424245', marginTop: '2px' }}>{doctor.specialty}</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', marginTop: '6px', fontSize: '10px' }}>
+                                    <div>
+                                        <span style={{ fontWeight: '600' }}>CRM:</span> {crmParts.uf} {crmParts.num}
+                                        {doctor.crm.includes('RQE') && (
+                                            <span style={{ marginLeft: '10px' }}><span style={{ fontWeight: '600' }}>RQE:</span> {doctor.crm.split('RQE')[1].trim().replace(/^[\s,]+/, '')}</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ marginTop: '4px', fontSize: '10px' }}>
+                                    <p><span style={{ fontWeight: '600' }}>Endereço:</span> {clinic.address.replace(/\n/g, ', ')}</p>
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '2px' }}>
+                                        <p><span style={{ fontWeight: '600' }}>Cidade:</span> {city}</p>
+                                        <p><span style={{ fontWeight: '600' }}>UF:</span> {clinicUF}</p>
+                                        <p><span style={{ fontWeight: '600' }}>Tel:</span> {clinic.phone}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ====== SEÇÃO 2: PACIENTE + PRESCRIÇÃO (centro) ====== */}
+                        <div style={{ border: bx, borderTop: 'none', padding: '12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            {/* Dados do paciente */}
+                            <div style={{ marginBottom: '16px' }}>
+                                <p style={{ borderBottom: bx, paddingBottom: '5px', marginBottom: '8px', fontSize: '12px' }}>
+                                    <span style={{ fontWeight: '600' }}>Paciente:</span>{' '}
+                                    {patient.name || <span style={{ color: '#aaa' }}>____________________________________________________</span>}
+                                </p>
+                                <p style={{ borderBottom: bx, paddingBottom: '5px', fontSize: '11px' }}>
+                                    <span style={{ fontWeight: '600' }}>Endereço:</span>{' '}
+                                    {patient.address || <span style={{ color: '#aaa' }}>____________________________________________________</span>}
+                                </p>
+                            </div>
+
+                            {/* Prescrição */}
+                            <div style={{ flex: 1 }}>
+                                <p style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', color: '#6e6e73', letterSpacing: '0.06em', marginBottom: '10px' }}>
+                                    Prescrição
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {meds.map((med, index) => (
+                                        <div key={med.id || index} style={{ paddingLeft: '4px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
+                                                <span style={{ fontWeight: '700', fontSize: '12px' }}>{index + 1}.</span>
+                                                <span style={{ fontWeight: '700', fontSize: '12px' }}>{med.name}</span>
+                                            </div>
+                                            <div style={{ paddingLeft: '18px', color: '#424245', whiteSpace: 'pre-line', fontSize: '11px', lineHeight: '1.5' }}>
+                                                <span style={{ fontWeight: '600', fontStyle: 'italic', display: 'block', marginBottom: '2px', fontSize: '10px', color: '#0071e3' }}>{med.route}</span>
+                                                {med.instructions || ''}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {meds.length === 0 && (
+                                        <p style={{ color: '#86868b', fontStyle: 'italic', textAlign: 'center', margin: '20px 0' }}>Prescrição...</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Data e Assinatura do Prescritor */}
+                            <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                                <p style={{ textAlign: 'center', fontSize: '11px', color: '#424245', marginBottom: '20px' }}>
+                                    {city}, {formatDate(hideDate, customDate)}
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ borderTop: bx, width: '220px', textAlign: 'center', paddingTop: '8px' }}>
+                                        <p style={{ fontWeight: '600', fontSize: '11px' }}>{doctor.name}</p>
+                                        <p style={{ fontSize: '9px', color: '#6e6e73', marginTop: '1px' }}>{doctor.crm}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ====== SEÇÃO 3 e 4: COMPRADOR + FORNECEDOR (rodapé) ====== */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: 'none' }}>
+                            {/* Identificação do Comprador */}
+                            <div style={{ border: bx, borderTop: 'none', borderRight: 'none', padding: '8px 10px', fontSize: '9px' }}>
+                                <p style={{ fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: bx, paddingBottom: '4px', marginBottom: '8px', fontSize: '8px' }}>
+                                    Identificação do Comprador
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '10px' }}>Nome: ___________________________________</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', borderBottom: '1px solid #d2d2d7', paddingBottom: '10px' }}>
+                                        <p>Ident.: _________________</p>
+                                        <p>Órg. Emissor: ___________</p>
+                                    </div>
+                                    <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '10px' }}>End.: ___________________________________</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr', gap: '6px' }}>
+                                        <p>Cidade: __________</p>
+                                        <p>UF: _____</p>
+                                        <p>Tel.: ___________</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Identificação do Fornecedor */}
+                            <div style={{ border: bx, borderTop: 'none', padding: '8px 10px', fontSize: '9px', display: 'flex', flexDirection: 'column' }}>
+                                <p style={{ fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: bx, paddingBottom: '4px', marginBottom: '8px', fontSize: '8px' }}>
+                                    Identificação do Fornecedor
+                                </p>
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #d2d2d7', marginBottom: '8px', minHeight: '40px' }}>
+                                    <p style={{ color: '#aaa', fontStyle: 'italic', fontSize: '8px' }}>Carimbo da Farmácia</p>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '10px' }}>Assinatura do Farmacêutico: __________________</p>
+                                    <p>Data: _____/_____/_________</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===== LAYOUT PADRÃO (receita simples / texto livre) =====
             return (
                 <div className={pageClass} style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
                     <div>
@@ -515,18 +662,6 @@
                             )}
                         </div>
 
-                        {/* Título da Receita (apenas controlados) */}
-                        {isControlled && (
-                            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                                <h2 style={{ fontSize: '17px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                                    Receituário de Controle Especial
-                                </h2>
-                                <p style={{ fontSize: '13px', fontWeight: '500', color: '#6e6e73', marginTop: '4px' }}>
-                                    {via === 1 ? "1ª VIA - RETENÇÃO DA FARMÁCIA" : "2ª VIA - ORIENTAÇÃO AO PACIENTE"}
-                                </p>
-                            </div>
-                        )}
-
                         {/* Paciente */}
                         <div style={{ marginBottom: '28px' }}>
                             <p style={{ fontSize: '16px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px' }}>
@@ -536,12 +671,6 @@
                             {patient.cpf && (
                                 <p style={{ fontSize: '13px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px', marginTop: '10px' }}>
                                     <span style={{ fontWeight: '600' }}>CPF:</span>{' '}{patient.cpf}
-                                </p>
-                            )}
-                            {isControlled && (
-                                <p style={{ fontSize: '13px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px', marginTop: '10px' }}>
-                                    <span style={{ fontWeight: '600' }}>Endereço:</span>{' '}
-                                    {patient.address || <span style={{ color: '#d2d2d7', fontStyle: 'italic' }}>Endereço completo...</span>}
                                 </p>
                             )}
                         </div>
@@ -595,37 +724,6 @@
                                 {city}, {formatDate(hideDate, customDate)}
                             </p>
                         </div>
-
-                        {/* Caixas Anvisa para controlados */}
-                        {isControlled && (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1.5px solid #d2d2d7', paddingTop: '16px' }}>
-                                <div className="box-controle">
-                                    <h4 style={{ fontWeight: '600', textAlign: 'center', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.04em' }}>Identificação do Comprador</h4>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Nome:</p>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>
-                                            <p>RG:</p>
-                                            <p>Órgão Emissor:</p>
-                                        </div>
-                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Endereço:</p>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>
-                                            <p>Cidade / UF:</p>
-                                            <p>Telefone:</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="box-controle" style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <h4 style={{ fontWeight: '600', textAlign: 'center', borderBottom: '1px solid #d2d2d7', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.04em' }}>Identificação do Fornecedor</h4>
-                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #d2d2d7', marginBottom: '8px' }}>
-                                        <p style={{ color: '#86868b', fontStyle: 'italic' }}>Carimbo da Farmácia</p>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Data:</p>
-                                        <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '4px' }}>Assinatura:</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             );
