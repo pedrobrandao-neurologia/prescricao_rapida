@@ -464,6 +464,15 @@
             },
         ];
 
+        // Helper: máscara de CPF (XXX.XXX.XXX-XX)
+        const formatCPF = (value) => {
+            const digits = value.replace(/\D/g, '').slice(0, 11);
+            if (digits.length <= 3) return digits;
+            if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+            if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+            return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+        };
+
         // Helper: data formatada (suporta data personalizada para receitas pós-datadas)
         const formatDate = (hideDate, customDateStr) => {
             if (hideDate) return "_____ de ________________ de 20____";
@@ -1284,7 +1293,8 @@
                                             type="text"
                                             placeholder="CPF do Paciente"
                                             value={patient.cpf}
-                                            onChange={(e) => setPatient({...patient, cpf: e.target.value})}
+                                            onChange={(e) => setPatient({...patient, cpf: formatCPF(e.target.value)})}
+                                            maxLength={14}
                                             className="w-full p-3 text-sm rounded-xl outline-none" style={{ border: '1px solid #d2d2d7', color: '#1d1d1f' }}
                                         />
                                         <input
