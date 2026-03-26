@@ -591,25 +591,25 @@
                 return (
                     <div className={pageClass} style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '11px', color: '#1d1d1f', lineHeight: '1.4' }}>
                         {/* ====== SEÇÃO 1: IDENTIFICAÇÃO DO EMITENTE (topo) ====== */}
-                        <div style={{ border: bx, padding: '10px 12px', marginBottom: '0' }}>
+                        <div style={{ border: bx, padding: '12px 14px', marginBottom: '0' }}>
                             <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                                <p style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                <p style={{ fontSize: '15px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                     Receituário de Controle Especial
                                 </p>
-                                <p style={{ fontSize: '10px', fontWeight: '600', color: '#6e6e73', marginTop: '2px' }}>
+                                <p style={{ fontSize: '12px', fontWeight: '600', color: '#6e6e73', marginTop: '2px' }}>
                                     {via === 1 ? "1ª VIA – RETENÇÃO DA FARMÁCIA" : "2ª VIA – ORIENTAÇÃO AO PACIENTE"}
                                 </p>
                             </div>
                             <div style={{ borderTop: bx, paddingTop: '8px' }}>
-                                <p style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', color: '#6e6e73', letterSpacing: '0.06em', marginBottom: '6px' }}>
+                                <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#6e6e73', letterSpacing: '0.06em', marginBottom: '6px' }}>
                                     Identificação do Emitente
                                 </p>
                                 {clinic.logo && (
                                     <img src={clinic.logo} alt={clinic.name} style={{ width: '100%', maxHeight: '90px', objectFit: 'contain', marginBottom: '8px', display: 'block' }} />
                                 )}
-                                <p style={{ fontWeight: '700', fontSize: '12px' }}>{doctor.name}</p>
-                                <p style={{ fontSize: '10px', color: '#424245', marginTop: '2px' }}>{doctor.specialty}</p>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', marginTop: '6px', fontSize: '10px' }}>
+                                <p style={{ fontWeight: '700', fontSize: '14px' }}>{doctor.name}</p>
+                                <p style={{ fontSize: '12px', color: '#424245', marginTop: '2px' }}>{doctor.specialty}</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', marginTop: '6px', fontSize: '12px' }}>
                                     <div>
                                         <span style={{ fontWeight: '600' }}>CRM:</span> {crmParts.uf} {crmParts.num}
                                         {doctor.crm.includes('RQE') && (
@@ -617,7 +617,7 @@
                                         )}
                                     </div>
                                 </div>
-                                <div style={{ marginTop: '4px', fontSize: '10px' }}>
+                                <div style={{ marginTop: '4px', fontSize: '12px' }}>
                                     <p><span style={{ fontWeight: '600' }}>Endereço:</span> {clinic.address.replace(/\n/g, ', ')}</p>
                                     <div style={{ display: 'flex', gap: '16px', marginTop: '2px' }}>
                                         <p><span style={{ fontWeight: '600' }}>Cidade:</span> {city}</p>
@@ -683,8 +683,8 @@
                         {/* ====== SEÇÃO 3 e 4: COMPRADOR + FORNECEDOR (rodapé) ====== */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: 'none' }}>
                             {/* Identificação do Comprador */}
-                            <div style={{ border: bx, borderTop: 'none', borderRight: 'none', padding: '8px 10px', fontSize: '9px' }}>
-                                <p style={{ fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: bx, paddingBottom: '4px', marginBottom: '8px', fontSize: '8px' }}>
+                            <div style={{ border: bx, borderTop: 'none', borderRight: 'none', padding: '10px 12px', fontSize: '12px' }}>
+                                <p style={{ fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: bx, paddingBottom: '5px', marginBottom: '10px', fontSize: '10px' }}>
                                     Identificação do Comprador
                                 </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -703,12 +703,12 @@
                             </div>
 
                             {/* Identificação do Fornecedor */}
-                            <div style={{ border: bx, borderTop: 'none', padding: '8px 10px', fontSize: '9px', display: 'flex', flexDirection: 'column' }}>
-                                <p style={{ fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: bx, paddingBottom: '4px', marginBottom: '8px', fontSize: '8px' }}>
+                            <div style={{ border: bx, borderTop: 'none', padding: '10px 12px', fontSize: '12px', display: 'flex', flexDirection: 'column' }}>
+                                <p style={{ fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: bx, paddingBottom: '5px', marginBottom: '10px', fontSize: '10px' }}>
                                     Identificação do Fornecedor
                                 </p>
-                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #d2d2d7', marginBottom: '8px', minHeight: '40px' }}>
-                                    <p style={{ color: '#aaa', fontStyle: 'italic', fontSize: '8px' }}>Carimbo da Farmácia</p>
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #d2d2d7', marginBottom: '10px', minHeight: '40px' }}>
+                                    <p style={{ color: '#aaa', fontStyle: 'italic', fontSize: '10px' }}>Carimbo da Farmácia</p>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <p style={{ borderBottom: '1px solid #d2d2d7', paddingBottom: '10px' }}>Assinatura do Farmacêutico: __________________</p>
