@@ -490,7 +490,7 @@
         // ========================================
         // Componente de Página de Prescrição (A4)
         // ========================================
-        const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, via, hideDate, doctor, clinic, city, patient, forPrint, customDate }) => {
+        const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, isSummary, via, hideDate, doctor, clinic, city, patient, forPrint, customDate }) => {
             const pageClass = forPrint ? "a4-page" : "a4-preview";
             const bx = '1px solid #1d1d1f'; // borda padrão ANVISA
 
@@ -504,6 +504,87 @@
                 const match = doctor.crm.match(/CRM[- ]?([A-Z]{2})\s*(\d+)/i);
                 return match ? { uf: match[1].toUpperCase(), num: match[2] } : { uf: '', num: doctor.crm };
             })();
+
+            // ===== LAYOUT QUADRO RESUMO (todos os medicamentos em formato simples) =====
+            if (isSummary) {
+                const hasAnyControlled = meds.some(m => m.isControlled);
+                return (
+                    <div className={pageClass} style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
+                        <div>
+                            {/* Cabeçalho */}
+                            <div style={{ textAlign: 'center', borderBottom: '1.5px solid #d2d2d7', paddingBottom: '18px', marginBottom: '28px' }}>
+                                {clinic.logo ? (
+                                    <React.Fragment>
+                                        <img src={clinic.logo} alt={clinic.name} style={{ maxHeight: '90px', margin: '0 auto 14px auto', display: 'block' }} />
+                                        <h1 style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.01em' }}>{doctor.name}</h1>
+                                        <p style={{ fontSize: '12px', color: '#6e6e73', fontWeight: '400', marginTop: '3px' }}>{doctor.specialty} | {doctor.crm}</p>
+                                    </React.Fragment>
+                                ) : (
+                                    <React.Fragment>
+                                        <h1 style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.01em' }}>{doctor.name}</h1>
+                                        <p style={{ fontSize: '12px', color: '#6e6e73', fontWeight: '400', marginTop: '3px' }}>{doctor.specialty} | {doctor.crm}</p>
+                                        <p style={{ fontSize: '11px', color: '#1d1d1f', marginTop: '10px', fontWeight: '600' }}>{clinic.name}</p>
+                                        <p style={{ fontSize: '10px', color: '#86868b', whiteSpace: 'pre-line', marginTop: '4px', lineHeight: '1.5' }}>{clinic.address}</p>
+                                        <p style={{ fontSize: '10px', color: '#86868b', marginTop: '3px' }}>Tel: {clinic.phone}</p>
+                                    </React.Fragment>
+                                )}
+                            </div>
+
+                            {/* Paciente */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <p style={{ fontSize: '16px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px' }}>
+                                    <span style={{ fontWeight: '600' }}>Paciente:</span>{' '}
+                                    {patient.name || <span style={{ color: '#d2d2d7', fontStyle: 'italic' }}>Nome do paciente...</span>}
+                                </p>
+                                {patient.cpf && (
+                                    <p style={{ fontSize: '13px', color: '#1d1d1f', borderBottom: '1px solid #d2d2d7', paddingBottom: '6px', marginTop: '10px' }}>
+                                        <span style={{ fontWeight: '600' }}>CPF:</span>{' '}{patient.cpf}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Todos os medicamentos */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                                {meds.map((med, index) => (
+                                    <div key={med.id || index} style={{ paddingLeft: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
+                                            <span style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '16px' }}>{index + 1}.</span>
+                                            <span style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '16px' }}>
+                                                {med.name}{med.isControlled ? ' *' : ''}
+                                            </span>
+                                        </div>
+                                        <div style={{ paddingLeft: '22px', color: '#424245', whiteSpace: 'pre-line', fontSize: '15px', lineHeight: '1.5' }}>
+                                            <span style={{ fontWeight: '500', color: '#0071e3', fontStyle: 'italic', display: 'block', marginBottom: '3px', fontSize: '13px' }}>{med.route}</span>
+                                            {med.instructions || <span style={{ color: '#d2d2d7', fontStyle: 'italic' }}>Instruções de uso...</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Nota sobre controlados */}
+                            {hasAnyControlled && (
+                                <div style={{ marginTop: '24px', padding: '10px 14px', background: '#f5f5f7', borderRadius: '8px', fontSize: '11px', color: '#6e6e73', lineHeight: '1.5' }}>
+                                    <span style={{ fontWeight: '600' }}>* Medicamento(s) sujeito(s) a controle especial.</span>{' '}
+                                    Receituário de Controle Especial apresentado em separado conforme legislação vigente (Portaria SVS/MS nº 344/98).
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Rodapé */}
+                        <div style={{ marginTop: 'auto', paddingTop: '28px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
+                                <div style={{ borderTop: '1px solid #1d1d1f', width: '240px', textAlign: 'center', paddingTop: '10px' }}>
+                                    <p style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '13px' }}>{doctor.name}</p>
+                                    <p style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{doctor.crm}</p>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#6e6e73', marginTop: '16px' }}>
+                                    {city}, {formatDate(hideDate, customDate)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
 
             // ===== LAYOUT CONTROLADO (ANVISA) =====
             if (isControlled) {
@@ -838,6 +919,24 @@
                     });
                 }
             });
+
+            // Quadro resumo: se há medicamentos controlados, gera página adicional
+            // com TODOS os medicamentos no formato simples, marcando os controlados com *
+            const hasControlled = validMeds.some(m => m.isControlled);
+            if (hasControlled && validMeds.length > 0) {
+                pages.unshift({
+                    id: `page-summary-${pageIdCounter++}`,
+                    isControlled: false,
+                    isSummary: true,
+                    hideDate: false,
+                    via: null,
+                    copyIndex: 1,
+                    totalCopies: 1,
+                    meds: validMeds,
+                    freeTexts: [],
+                    isEmpty: false
+                });
+            }
 
             // Cada texto livre em uma página separada
             validFreeTexts.forEach(ft => {
@@ -1259,6 +1358,9 @@
 
             // Descrição de cada página para o banner do preview
             const getPageLabel = (page) => {
+                if (page.isSummary) {
+                    return 'Quadro Resumo — Todos os Medicamentos';
+                }
                 if (page.freeTexts && page.freeTexts.length > 0 && page.meds.length === 0) {
                     return 'Texto Livre';
                 }
@@ -1748,6 +1850,7 @@
                                             meds={page.meds}
                                             freeTexts={page.freeTexts}
                                             isControlled={page.isControlled}
+                                            isSummary={page.isSummary}
                                             via={page.via}
                                             hideDate={page.hideDate}
                                             doctor={doctor}
@@ -1774,6 +1877,7 @@
                                 meds={page.meds}
                                 freeTexts={page.freeTexts}
                                 isControlled={page.isControlled}
+                                isSummary={page.isSummary}
                                 via={page.via}
                                 hideDate={page.hideDate}
                                 doctor={doctor}
