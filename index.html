@@ -222,28 +222,6 @@
         };
 
         // ========================================
-        // Mock ANVISA - Dados de Medicamentos
-        // ========================================
-        const ANVISA_MEDICATIONS = [
-            { id: 1, principioAtivo: 'Levodopa + Benserazida', nomeComercial: 'Prolopa', apresentacao: '200/50mg comprimido', isControlled: false },
-            { id: 2, principioAtivo: 'Pramipexol', nomeComercial: 'Sifrol', apresentacao: '0,25mg comprimido', isControlled: false },
-            { id: 3, principioAtivo: 'Donepezila', nomeComercial: 'ErANZ', apresentacao: '10mg comprimido', isControlled: false },
-            { id: 4, principioAtivo: 'Quetiapina', nomeComercial: 'Seroquel', apresentacao: '25mg comprimido', isControlled: true },
-            { id: 5, principioAtivo: 'Toxina Botulínica A', nomeComercial: 'Botox', apresentacao: '100U frasco-ampola', isControlled: false },
-        ];
-
-        const searchAnvisaMedications = (query) => {
-            if (!query || query.length < 3) return [];
-            const q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return ANVISA_MEDICATIONS.filter(med => {
-                const searchFields = [
-                    med.principioAtivo, med.nomeComercial, med.apresentacao
-                ].join(' ').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                return searchFields.includes(q);
-            });
-        };
-
-        // ========================================
         // Base CID-10 (Códigos mais comuns em Neurologia)
         // ========================================
         const CID10_DATABASE = [
@@ -819,7 +797,7 @@
         // ========================================
         // Lógica de Geração de Páginas
         // ========================================
-        const generatePages = (medications, freeTextBlocks, separatePrescriptions) => {
+        const generatePages = (medications, freeTextBlocks, separatePrescriptions, singleViaControlled) => {
             const validMeds = medications.filter(m => m.name.trim() !== '');
             const validFreeTexts = (freeTextBlocks || []).filter(ft => ft.content.trim() !== '');
             const pages = [];
@@ -898,17 +876,19 @@
                                 freeTexts: [],
                                 isEmpty: false
                             });
-                            pages.push({
-                                id: `page-${pageIdCounter++}`,
-                                isControlled: true,
-                                hideDate,
-                                via: 2,
-                                copyIndex: copyNum,
-                                totalCopies: maxCopies,
-                                meds: chunk,
-                                freeTexts: [],
-                                isEmpty: false
-                            });
+                            if (!singleViaControlled) {
+                                pages.push({
+                                    id: `page-${pageIdCounter++}`,
+                                    isControlled: true,
+                                    hideDate,
+                                    via: 2,
+                                    copyIndex: copyNum,
+                                    totalCopies: maxCopies,
+                                    meds: chunk,
+                                    freeTexts: [],
+                                    isEmpty: false
+                                });
+                            }
                         } else {
                             pages.push({
                                 id: `page-${pageIdCounter++}`,
@@ -949,7 +929,7 @@
                 pages.push({
                     id: `page-freetext-${pageIdCounter++}`,
                     isControlled: false,
-                    hideDate: false,
+                    hideDate: !!ft.hideDate,
                     via: null,
                     copyIndex: 1,
                     totalCopies: 1,
@@ -960,100 +940,6 @@
             });
 
             return pages;
-        };
-
-        // ========================================
-        // Componente de Busca de Medicamento (Typeahead)
-        // ========================================
-        const MedicationSearch = ({ onSelect }) => {
-            const [query, setQuery] = useState('');
-            const [results, setResults] = useState([]);
-            const [showDropdown, setShowDropdown] = useState(false);
-            const inputRef = React.useRef(null);
-            const dropdownRef = React.useRef(null);
-
-            useEffect(() => {
-                if (query.length >= 3) {
-                    const found = searchAnvisaMedications(query);
-                    setResults(found);
-                    setShowDropdown(found.length > 0);
-                } else {
-                    setResults([]);
-                    setShowDropdown(false);
-                }
-            }, [query]);
-
-            useEffect(() => {
-                const handleClickOutside = (e) => {
-                    if (dropdownRef.current && !dropdownRef.current.contains(e.target) &&
-                        inputRef.current && !inputRef.current.contains(e.target)) {
-                        setShowDropdown(false);
-                    }
-                };
-                document.addEventListener('mousedown', handleClickOutside);
-                return () => document.removeEventListener('mousedown', handleClickOutside);
-            }, []);
-
-            const handleSelect = (med) => {
-                onSelect(med);
-                setQuery('');
-                setResults([]);
-                setShowDropdown(false);
-            };
-
-            return (
-                <div style={{ position: 'relative' }}>
-                    <div style={{ position: 'relative' }}>
-                        <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#86868b' }}>
-                            <Icons.Search />
-                        </div>
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            placeholder="Buscar medicamento ANVISA (mín. 3 letras)..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
-                            className="w-full p-3 pl-10 rounded-xl outline-none text-sm"
-                            style={{ border: '1px solid #d2d2d7', color: '#1d1d1f', background: '#fbfbfd' }}
-                        />
-                    </div>
-                    {showDropdown && (
-                        <div
-                            ref={dropdownRef}
-                            style={{
-                                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
-                                background: '#fff', border: '1px solid #d2d2d7', borderRadius: '12px',
-                                marginTop: '4px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                                maxHeight: '220px', overflowY: 'auto'
-                            }}
-                        >
-                            {results.map(med => (
-                                <button
-                                    key={med.id}
-                                    onClick={() => handleSelect(med)}
-                                    className="w-full text-left px-4 py-3 transition-colors"
-                                    style={{ borderBottom: '1px solid #f0f0f2', color: '#1d1d1f' }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f7'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <span style={{ color: '#0071e3' }}><Icons.Pill /></span>
-                                        <span className="font-semibold text-sm">{med.principioAtivo}</span>
-                                        <span className="text-xs px-2 py-0.5 rounded-lg" style={{ background: '#f5f5f7', color: '#6e6e73' }}>
-                                            {med.nomeComercial}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs mt-1" style={{ color: '#86868b', paddingLeft: '24px' }}>
-                                        {med.apresentacao}
-                                        {med.isControlled && <span style={{ color: '#e34040', fontWeight: '600', marginLeft: '8px' }}>Controlado</span>}
-                                    </p>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            );
         };
 
         // ========================================
@@ -1091,6 +977,7 @@
 
             const [showDoctorSettings, setShowDoctorSettings] = useState(false);
             const [separatePrescriptions, setSeparatePrescriptions] = useState(false);
+            const [singleViaControlled, setSingleViaControlled] = useState(false);
 
             // Data personalizada para receitas pós-datadas
             const [customDate, setCustomDate] = useState('');
@@ -1117,9 +1004,9 @@
 
             // Auto-save: rascunho da receita atual
             useEffect(() => {
-                const draft = { patient, medications, freeTexts, separatePrescriptions, customDate };
+                const draft = { patient, medications, freeTexts, separatePrescriptions, singleViaControlled, customDate };
                 localStorage.setItem('pr_draft', JSON.stringify(draft));
-            }, [patient, medications, freeTexts, separatePrescriptions, customDate]);
+            }, [patient, medications, freeTexts, separatePrescriptions, singleViaControlled, customDate]);
 
             // Restaurar rascunho ao abrir
             useEffect(() => {
@@ -1130,6 +1017,7 @@
                         if (draft.medications && draft.medications.length > 0) setMedications(draft.medications);
                         if (draft.freeTexts && draft.freeTexts.length > 0) setFreeTexts(draft.freeTexts);
                         if (draft.separatePrescriptions) setSeparatePrescriptions(draft.separatePrescriptions);
+                        if (draft.singleViaControlled) setSingleViaControlled(draft.singleViaControlled);
                         if (draft.customDate) setCustomDate(draft.customDate);
                     }
                 } catch {}
@@ -1175,7 +1063,7 @@
             }, []);
 
             // Gerar páginas com useMemo para evitar recalcular a cada render
-            const pages = useMemo(() => generatePages(medications, freeTexts, separatePrescriptions), [medications, freeTexts, separatePrescriptions]);
+            const pages = useMemo(() => generatePages(medications, freeTexts, separatePrescriptions, singleViaControlled), [medications, freeTexts, separatePrescriptions, singleViaControlled]);
 
             // Páginas para impressão (exclui vazias)
             const printPages = useMemo(() => pages.filter(p => !p.isEmpty), [pages]);
@@ -1191,7 +1079,7 @@
             }, []);
 
             const addFreeText = useCallback(() => {
-                setFreeTexts(prev => [...prev, { id: Date.now(), title: '', content: '' }]);
+                setFreeTexts(prev => [...prev, { id: Date.now(), title: '', content: '', hideDate: false }]);
             }, []);
 
             const removeFreeText = useCallback((id) => {
@@ -1224,26 +1112,13 @@
                 window.print();
             };
 
-            // Adicionar medicamento da busca ANVISA
-            const handleAddFromSearch = useCallback((anvisaMed) => {
-                const medName = `${anvisaMed.principioAtivo} (${anvisaMed.nomeComercial}) - ${anvisaMed.apresentacao}`;
-                setMedications(prev => [...prev, {
-                    id: Date.now(),
-                    route: 'Uso Oral',
-                    name: medName,
-                    instructions: '',
-                    isControlled: anvisaMed.isControlled,
-                    hideDate: false,
-                    copies: 1
-                }]);
-            }, []);
-
             // Adicionar template de texto livre
             const handleAddTemplate = useCallback((template) => {
                 setFreeTexts(prev => [...prev, {
                     id: Date.now(),
                     title: template.title,
-                    content: template.content
+                    content: template.content,
+                    hideDate: false
                 }]);
             }, []);
 
@@ -1558,11 +1433,6 @@
                                         </span>
                                     </div>
 
-                                    {/* Busca Inteligente de Medicamentos */}
-                                    <div className="mb-4">
-                                        <MedicationSearch onSelect={handleAddFromSearch} />
-                                    </div>
-
                                     {/* Opção de receita separada */}
                                     <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl mb-3 transition" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
                                         <input
@@ -1573,6 +1443,19 @@
                                         />
                                         <span className="text-xs font-medium select-none" style={{ color: '#1d1d1f' }}>
                                             Receita separada por medicamento
+                                        </span>
+                                    </label>
+
+                                    {/* Opção de imprimir apenas a 1ª via do controle especial */}
+                                    <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl mb-3 transition" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={singleViaControlled}
+                                            onChange={(e) => setSingleViaControlled(e.target.checked)}
+                                            className="w-4 h-4 rounded cursor-pointer accent-blue-600"
+                                        />
+                                        <span className="text-xs font-medium select-none" style={{ color: '#1d1d1f' }}>
+                                            Controle especial: apenas 1ª via (farmácia)
                                         </span>
                                     </label>
 
@@ -1751,6 +1634,20 @@
                                                         rows="4"
                                                         className="w-full p-2.5 text-sm rounded-xl outline-none resize-none transition" style={{ border: '1px solid #e8e8ed', color: '#1d1d1f', background: '#fbfbfd' }}
                                                     ></textarea>
+
+                                                    <div className="flex flex-wrap gap-2 pt-3" style={{ borderTop: '1px solid #f0f0f2' }}>
+                                                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl transition flex-1 min-w-[120px]" style={{ background: '#f5f5f7', border: '1px solid #e8e8ed' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={!!ft.hideDate}
+                                                                onChange={(e) => updateFreeText(ft.id, 'hideDate', e.target.checked)}
+                                                                className="w-4 h-4 rounded cursor-pointer accent-blue-600"
+                                                            />
+                                                            <span className="text-xs font-medium select-none" style={{ color: '#1d1d1f' }}>
+                                                                Sem Data
+                                                            </span>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
