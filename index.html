@@ -797,7 +797,77 @@
         // ========================================
         // Lógica de Geração de Páginas
         // ========================================
-        const generatePages = (medications, freeTextBlocks, separatePrescriptions, singleViaControlled) => {
+
+        // Divide o conteúdo de um texto livre em pedaços que cabem em uma página A4,
+        // medindo a altura real no DOM (offscreen) e preferindo quebras em espaços/linhas.
+        // Garante que páginas subsequentes mantenham o mesmo cabeçalho.
+        const splitFreeTextIntoChunks = (content, hasLogo, hasCpf, hasTitle) => {
+            if (!content || !content.trim()) return [content];
+            if (typeof document === 'undefined' || !document.body) return [content];
+
+            const PAGE_HEIGHT_MM = 297;
+            const PAGE_PADDING_MM = 40;       // padding 20mm topo + 20mm rodapé
+            const HEADER_MM = 44;             // cabeçalho (com ou sem logo) + borda inferior + margem
+            const PATIENT_MM = 18 + (hasCpf ? 10 : 0);
+            const TITLE_MM = hasTitle ? 10 : 0;
+            const FOOTER_MM = 40;             // linha de assinatura + cidade/data + margens
+            const SAFETY_MM = 6;
+            const availableMm = PAGE_HEIGHT_MM - PAGE_PADDING_MM - HEADER_MM - PATIENT_MM - TITLE_MM - FOOTER_MM - SAFETY_MM;
+            const PX_PER_MM = 96 / 25.4;
+            const availablePx = Math.max(80, availableMm * PX_PER_MM);
+            const widthPx = (210 - 40) * PX_PER_MM; // 170mm de largura útil
+
+            const probe = document.createElement('div');
+            probe.style.cssText = [
+                'position:fixed', 'left:-99999px', 'top:0',
+                'width:' + widthPx + 'px', 'visibility:hidden',
+                'font-size:15px', 'line-height:1.6', 'color:#424245',
+                'padding-left:12px', 'white-space:pre-line', 'box-sizing:border-box',
+                'font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif'
+            ].join(';');
+            document.body.appendChild(probe);
+
+            try {
+                probe.textContent = content;
+                if (probe.scrollHeight <= availablePx) return [content];
+
+                // Tokeniza preservando whitespace/quebras de linha
+                const tokens = [];
+                const re = /(\s+|\S+)/g;
+                let m;
+                while ((m = re.exec(content)) !== null) tokens.push(m[0]);
+
+                const chunks = [];
+                let lo = 0;
+                while (lo < tokens.length) {
+                    // Busca binária pelo maior fim tal que tokens[lo..fim) ainda caiba
+                    let low = lo + 1, high = tokens.length, best = lo + 1;
+                    while (low <= high) {
+                        const mid = (low + high) >> 1;
+                        probe.textContent = tokens.slice(lo, mid).join('');
+                        if (probe.scrollHeight <= availablePx) { best = mid; low = mid + 1; }
+                        else { high = mid - 1; }
+                    }
+                    // Recua até a última quebra/espaço para não partir palavras
+                    let breakAt = best;
+                    if (breakAt < tokens.length) {
+                        for (let j = breakAt - 1; j > lo; j--) {
+                            if (/[\n\s]/.test(tokens[j])) { breakAt = j + 1; break; }
+                        }
+                    }
+                    if (breakAt <= lo) breakAt = best;
+                    const chunk = tokens.slice(lo, breakAt).join('').replace(/^\s+|\s+$/g, '');
+                    if (chunk) chunks.push(chunk);
+                    lo = breakAt;
+                    while (lo < tokens.length && /^\s+$/.test(tokens[lo])) lo++;
+                }
+                return chunks.length > 0 ? chunks : [content];
+            } finally {
+                document.body.removeChild(probe);
+            }
+        };
+
+        const generatePages = (medications, freeTextBlocks, separatePrescriptions, singleViaControlled, clinic, patient) => {
             const validMeds = medications.filter(m => m.name.trim() !== '');
             const validFreeTexts = (freeTextBlocks || []).filter(ft => ft.content.trim() !== '');
             const pages = [];
@@ -924,18 +994,28 @@
                 });
             }
 
-            // Cada texto livre em uma página separada
+            // Cada texto livre: quebra automática em múltiplas páginas se exceder uma A4.
+            // Cada página gerada mantém o mesmo cabeçalho/paciente/rodapé.
+            const hasLogo = !!(clinic && clinic.logo);
+            const hasCpf = !!(patient && patient.cpf);
             validFreeTexts.forEach(ft => {
-                pages.push({
-                    id: `page-freetext-${pageIdCounter++}`,
-                    isControlled: false,
-                    hideDate: !!ft.hideDate,
-                    via: null,
-                    copyIndex: 1,
-                    totalCopies: 1,
-                    meds: [],
-                    freeTexts: [ft],
-                    isEmpty: false
+                const chunks = splitFreeTextIntoChunks(ft.content, hasLogo, hasCpf, !!ft.title);
+                const total = chunks.length;
+                chunks.forEach((chunk, idx) => {
+                    pages.push({
+                        id: `page-freetext-${pageIdCounter++}`,
+                        isControlled: false,
+                        hideDate: !!ft.hideDate,
+                        via: null,
+                        copyIndex: 1,
+                        totalCopies: 1,
+                        meds: [],
+                        // Em páginas de continuação, o título só aparece na primeira
+                        freeTexts: [{ ...ft, content: chunk, title: idx === 0 ? ft.title : '' }],
+                        isEmpty: false,
+                        ftPartIndex: idx + 1,
+                        ftPartTotal: total
+                    });
                 });
             });
 
@@ -1063,7 +1143,7 @@
             }, []);
 
             // Gerar páginas com useMemo para evitar recalcular a cada render
-            const pages = useMemo(() => generatePages(medications, freeTexts, separatePrescriptions, singleViaControlled), [medications, freeTexts, separatePrescriptions, singleViaControlled]);
+            const pages = useMemo(() => generatePages(medications, freeTexts, separatePrescriptions, singleViaControlled, clinic, patient), [medications, freeTexts, separatePrescriptions, singleViaControlled, clinic, patient]);
 
             // Páginas para impressão (exclui vazias)
             const printPages = useMemo(() => pages.filter(p => !p.isEmpty), [pages]);
@@ -1163,59 +1243,101 @@
                 localStorage.removeItem('pr_draft');
             }, []);
 
-            // Baixar PDF com html2pdf.js
-            // Captura cada página de preview (.a4-preview) individualmente e monta o PDF
+            // Baixar PDF: clona a área de impressão em um container offscreen no tamanho A4
+            // real e captura cada página com html2canvas, montando o PDF com jsPDF.
+            // Isso evita problemas de escala em mobile e popups bloqueados.
             const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
             const handleDownloadPDF = useCallback(async () => {
                 if (isGeneratingPDF) return;
+                if (typeof window.html2pdf === 'undefined') {
+                    alert('Biblioteca de geração de PDF não carregada. Verifique sua conexão e recarregue a página.');
+                    return;
+                }
                 setIsGeneratingPDF(true);
                 savePatientToHistory();
-                try {
-                    // Coleta todas as páginas de preview visíveis na tela
-                    const previewPages = document.querySelectorAll('.no-print .a4-preview');
-                    if (previewPages.length === 0) return;
 
+                let offscreen = null;
+                try {
+                    if (printPages.length === 0) {
+                        alert('Não há páginas para gerar.');
+                        return;
+                    }
+
+                    // Nome do arquivo: prescricao_<NomePaciente>_<YYYY-MM-DD>.pdf
                     const today = new Date();
                     const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
                     const patientSlug = (patient.name || 'paciente').trim().replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    const fileName = `prescricao_${patientSlug}_${dateStr}.pdf`;
+                    const fileName = `prescricao_${patientSlug || 'paciente'}_${dateStr}.pdf`;
+
+                    // Cria container offscreen com fundo branco fora da viewport
+                    offscreen = document.createElement('div');
+                    offscreen.style.cssText = 'position:fixed;left:-99999px;top:0;background:#ffffff;z-index:-1;';
+                    document.body.appendChild(offscreen);
+
+                    // Clona a print-area (que já contém todas as páginas em tamanho A4)
+                    const printArea = document.querySelector('.print-area');
+                    if (!printArea) throw new Error('Área de impressão não encontrada');
+
+                    const clone = printArea.cloneNode(true);
+                    // Remove a classe "print-area" para neutralizar o display:none do @media screen
+                    clone.className = '';
+                    clone.style.display = 'block';
+                    clone.style.position = 'static';
+                    offscreen.appendChild(clone);
+
+                    const a4Pages = clone.querySelectorAll('.a4-page');
+                    if (a4Pages.length === 0) throw new Error('Nenhuma página para gerar');
+
+                    // Força dimensões A4 reais em cada página clonada
+                    a4Pages.forEach(p => {
+                        p.style.width = '210mm';
+                        p.style.height = '297mm';
+                        p.style.minHeight = '297mm';
+                        p.style.padding = '20mm';
+                        p.style.margin = '0';
+                        p.style.background = '#ffffff';
+                        p.style.boxShadow = 'none';
+                        p.style.border = 'none';
+                        p.style.borderRadius = '0';
+                        p.style.display = 'flex';
+                        p.style.flexDirection = 'column';
+                        p.style.justifyContent = 'space-between';
+                        p.style.boxSizing = 'border-box';
+                        p.style.pageBreakAfter = 'auto';
+                        p.style.overflow = 'hidden';
+                    });
+
+                    // Aguarda um tick para o layout estabilizar
+                    await new Promise(r => setTimeout(r, 80));
 
                     const baseOpt = {
                         margin: 0,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        image: { type: 'jpeg', quality: 0.95 },
+                        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
                     };
 
-                    // Gera a primeira página para obter o objeto jsPDF
-                    const firstPage = previewPages[0];
-                    const worker = html2pdf().set(baseOpt).from(firstPage);
-                    const pdf = await worker.toPdf().get('pdf');
+                    // Obtém o objeto jsPDF a partir da primeira página
+                    const firstWorker = html2pdf().set(baseOpt).from(a4Pages[0]);
+                    const pdf = await firstWorker.toPdf().get('pdf');
+                    const pdfW = pdf.internal.pageSize.getWidth();
+                    const pdfH = pdf.internal.pageSize.getHeight();
 
-                    // Adiciona as demais páginas
-                    for (let i = 1; i < previewPages.length; i++) {
-                        const canvas = await html2pdf().set(baseOpt).from(previewPages[i]).toCanvas();
-                        const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                        const pdfWidth = pdf.internal.pageSize.getWidth();
-                        const pdfHeight = pdf.internal.pageSize.getHeight();
+                    // Adiciona as demais páginas (capturadas como canvas)
+                    for (let i = 1; i < a4Pages.length; i++) {
+                        const canvas = await html2pdf().set(baseOpt).from(a4Pages[i]).toCanvas();
+                        const imgData = canvas.toDataURL('image/jpeg', 0.95);
                         pdf.addPage();
-                        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
                     }
 
-                    // Gera blob, abre em nova aba e faz download
-                    const pdfBlob = pdf.output('blob');
-                    const blobUrl = URL.createObjectURL(pdfBlob);
-                    window.open(blobUrl, '_blank');
-
-                    const link = document.createElement('a');
-                    link.href = blobUrl;
-                    link.download = fileName;
-                    link.click();
-
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                    // Dispara o download diretamente (jsPDF cuida do blob/link)
+                    pdf.save(fileName);
                 } catch (err) {
                     console.error('Erro ao gerar PDF:', err);
+                    alert('Erro ao gerar PDF: ' + (err && err.message ? err.message : err));
                 } finally {
+                    if (offscreen && offscreen.parentNode) offscreen.parentNode.removeChild(offscreen);
                     setIsGeneratingPDF(false);
                 }
             }, [printPages, patient, isGeneratingPDF]);
@@ -1226,7 +1348,11 @@
                     return 'Quadro Resumo — Todos os Medicamentos';
                 }
                 if (page.freeTexts && page.freeTexts.length > 0 && page.meds.length === 0) {
-                    return 'Texto Livre';
+                    let label = 'Texto Livre';
+                    if (page.ftPartTotal && page.ftPartTotal > 1) {
+                        label += ` (página ${page.ftPartIndex} de ${page.ftPartTotal})`;
+                    }
+                    return label;
                 }
                 let label = page.isControlled
                     ? `Controle Especial - ${page.via}ª Via`
