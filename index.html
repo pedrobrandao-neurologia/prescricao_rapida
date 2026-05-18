@@ -1323,9 +1323,17 @@
                     const pdfW = pdf.internal.pageSize.getWidth();
                     const pdfH = pdf.internal.pageSize.getHeight();
 
-                    // Adiciona as demais páginas (capturadas como canvas)
+                    // Adiciona as demais páginas (capturadas como canvas).
+                    // Em html2pdf 0.10.x, toCanvas() resolve com o próprio Worker;
+                    // o canvas é exposto via .get('canvas') ou em worker.prop.canvas.
                     for (let i = 1; i < a4Pages.length; i++) {
-                        const canvas = await html2pdf().set(baseOpt).from(a4Pages[i]).toCanvas();
+                        const w = html2pdf().set(baseOpt).from(a4Pages[i]);
+                        await w.toCanvas();
+                        const canvas = (w.prop && w.prop.canvas)
+                            || (await w.get('canvas'));
+                        if (!canvas || typeof canvas.toDataURL !== 'function') {
+                            throw new Error('Falha ao renderizar a página ' + (i + 1));
+                        }
                         const imgData = canvas.toDataURL('image/jpeg', 0.95);
                         pdf.addPage();
                         pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
