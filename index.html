@@ -620,6 +620,11 @@
                                     <span style={{ fontWeight: '600' }}>Paciente:</span>{' '}
                                     {patient.name || <span style={{ color: '#aaa' }}>____________________________________________________</span>}
                                 </p>
+                                {patient.cpf && (
+                                    <p style={{ borderBottom: bx, paddingBottom: '5px', marginBottom: '8px', fontSize: '11px' }}>
+                                        <span style={{ fontWeight: '600' }}>CPF:</span>{' '}{patient.cpf}
+                                    </p>
+                                )}
                                 <p style={{ borderBottom: bx, paddingBottom: '5px', fontSize: '11px' }}>
                                     <span style={{ fontWeight: '600' }}>Endereço:</span>{' '}
                                     {patient.address || <span style={{ color: '#aaa' }}>____________________________________________________</span>}
