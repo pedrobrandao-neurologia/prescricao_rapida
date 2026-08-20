@@ -457,26 +457,30 @@
             return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
         };
 
-        // Helper: data formatada (suporta data personalizada para receitas pós-datadas)
+        // Helper: data formatada em DD/MM/AAAA (suporta data personalizada para receitas pós-datadas)
         const formatDate = (hideDate, customDateStr) => {
-            if (hideDate) return "_____ de ________________ de 20____";
-            const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            if (hideDate) return "___/___/______";
+            const pad = (n) => String(n).padStart(2, '0');
             if (customDateStr) {
                 const [year, month, day] = customDateStr.split('-').map(Number);
                 if (year && month && day) {
-                    return `${day} de ${months[month - 1]} de ${year}`;
+                    return `${pad(day)}/${pad(month)}/${year}`;
                 }
             }
             const date = new Date();
-            return `${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+            return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
         };
 
         // ========================================
         // Componente de Página de Prescrição (A4)
         // ========================================
-        const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, isSummary, via, hideDate, doctor, clinic, city, patient, forPrint, customDate }) => {
+        const PrescriptionPage = ({ meds, freeTexts: pageFreeTexts, isControlled, isSummary, via, hideDate, doctor, clinic, city, patient, forPrint, customDate, ftPartIndex, ftPartTotal }) => {
             const pageClass = forPrint ? "a4-page" : "a4-preview";
             const bx = '1px solid #1d1d1f'; // borda padrão ANVISA
+
+            // Texto livre multipágina: assinatura/data apenas na última página
+            const isMultiPageFt = !!(ftPartTotal && ftPartTotal > 1);
+            const showSignature = !isMultiPageFt || ftPartIndex === ftPartTotal;
 
             // Extrai UF da clínica a partir do address (ex: "Brasília – DF" => "DF")
             const clinicUF = (() => {
@@ -554,16 +558,16 @@
                             )}
                         </div>
 
-                        {/* Rodapé */}
+                        {/* Rodapé: data à esquerda, assinatura embaixo à direita (espaço para carimbo) */}
                         <div style={{ marginTop: 'auto', paddingTop: '28px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px' }}>
+                                <p style={{ fontSize: '13px', color: '#6e6e73', paddingBottom: '4px' }}>
+                                    Data: {formatDate(hideDate, customDate)}
+                                </p>
                                 <div style={{ borderTop: '1px solid #1d1d1f', width: '240px', textAlign: 'center', paddingTop: '10px' }}>
                                     <p style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '13px' }}>{doctor.name}</p>
                                     <p style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{doctor.crm}</p>
                                 </div>
-                                <p style={{ fontSize: '13px', color: '#6e6e73', marginTop: '16px' }}>
-                                    {city}, {formatDate(hideDate, customDate)}
-                                </p>
                             </div>
                         </div>
                     </div>
@@ -655,12 +659,12 @@
                                 </div>
                             </div>
 
-                            {/* Data e Assinatura do Prescritor */}
+                            {/* Data (esquerda) e Assinatura do Prescritor (direita, espaço para carimbo) */}
                             <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-                                <p style={{ textAlign: 'center', fontSize: '11px', color: '#424245', marginBottom: '20px' }}>
-                                    {city}, {formatDate(hideDate, customDate)}
-                                </p>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+                                    <p style={{ fontSize: '11px', color: '#424245', paddingBottom: '4px' }}>
+                                        Data: {formatDate(hideDate, customDate)}
+                                    </p>
                                     <div style={{ borderTop: bx, width: '220px', textAlign: 'center', paddingTop: '8px' }}>
                                         <p style={{ fontWeight: '600', fontSize: '11px' }}>{doctor.name}</p>
                                         <p style={{ fontSize: '9px', color: '#6e6e73', marginTop: '1px' }}>{doctor.crm}</p>
@@ -783,17 +787,25 @@
                         )}
                     </div>
 
-                    {/* Rodapé */}
-                    <div style={{ marginTop: 'auto', paddingTop: '28px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
-                            <div style={{ borderTop: '1px solid #1d1d1f', width: '240px', textAlign: 'center', paddingTop: '10px' }}>
-                                <p style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '13px' }}>{doctor.name}</p>
-                                <p style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{doctor.crm}</p>
+                    {/* Rodapé: data à esquerda, assinatura embaixo à direita (espaço para carimbo).
+                        Em texto livre multipágina, a assinatura aparece apenas na última página. */}
+                    <div style={{ marginTop: 'auto', paddingTop: isMultiPageFt && !showSignature ? '10px' : '28px' }}>
+                        {showSignature && (
+                            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px' }}>
+                                <p style={{ fontSize: '13px', color: '#6e6e73', paddingBottom: '4px' }}>
+                                    Data: {formatDate(hideDate, customDate)}
+                                </p>
+                                <div style={{ borderTop: '1px solid #1d1d1f', width: '240px', textAlign: 'center', paddingTop: '10px' }}>
+                                    <p style={{ fontWeight: '600', color: '#1d1d1f', fontSize: '13px' }}>{doctor.name}</p>
+                                    <p style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{doctor.crm}</p>
+                                </div>
                             </div>
-                            <p style={{ fontSize: '13px', color: '#6e6e73', marginTop: '16px' }}>
-                                {city}, {formatDate(hideDate, customDate)}
+                        )}
+                        {isMultiPageFt && (
+                            <p style={{ textAlign: 'center', fontSize: '10px', color: '#86868b', marginTop: showSignature ? '12px' : '0' }}>
+                                Página {ftPartIndex} de {ftPartTotal}
                             </p>
-                        </div>
+                        )}
                     </div>
                 </div>
             );
@@ -815,11 +827,14 @@
             const HEADER_MM = 44;             // cabeçalho (com ou sem logo) + borda inferior + margem
             const PATIENT_MM = 18 + (hasCpf ? 10 : 0);
             const TITLE_MM = hasTitle ? 10 : 0;
-            const FOOTER_MM = 40;             // linha de assinatura + cidade/data + margens
+            const FOOTER_SIGN_MM = 34;        // data + linha de assinatura (apenas última página)
+            const FOOTER_PAGENUM_MM = 12;     // apenas número de página (páginas intermediárias)
             const SAFETY_MM = 6;
-            const availableMm = PAGE_HEIGHT_MM - PAGE_PADDING_MM - HEADER_MM - PATIENT_MM - TITLE_MM - FOOTER_MM - SAFETY_MM;
+            const baseMm = PAGE_HEIGHT_MM - PAGE_PADDING_MM - HEADER_MM - PATIENT_MM - TITLE_MM - SAFETY_MM;
             const PX_PER_MM = 96 / 25.4;
-            const availablePx = Math.max(80, availableMm * PX_PER_MM);
+            // Última página reserva espaço para a assinatura; intermediárias só para o nº da página
+            const availableFinalPx = Math.max(80, (baseMm - FOOTER_SIGN_MM) * PX_PER_MM);
+            const availableMidPx = Math.max(80, (baseMm - FOOTER_PAGENUM_MM) * PX_PER_MM);
             const widthPx = (210 - 40) * PX_PER_MM; // 170mm de largura útil
 
             const probe = document.createElement('div');
@@ -834,7 +849,7 @@
 
             try {
                 probe.textContent = content;
-                if (probe.scrollHeight <= availablePx) return [content];
+                if (probe.scrollHeight <= availableFinalPx) return [content];
 
                 // Tokeniza preservando whitespace/quebras de linha
                 const tokens = [];
@@ -845,12 +860,20 @@
                 const chunks = [];
                 let lo = 0;
                 while (lo < tokens.length) {
-                    // Busca binária pelo maior fim tal que tokens[lo..fim) ainda caiba
+                    // Se o restante cabe inteiro na última página (com espaço da assinatura), encerra
+                    const remaining = tokens.slice(lo).join('').replace(/^\s+|\s+$/g, '');
+                    probe.textContent = remaining;
+                    if (probe.scrollHeight <= availableFinalPx) {
+                        if (remaining) chunks.push(remaining);
+                        break;
+                    }
+                    // Página intermediária (sem assinatura): busca binária pelo maior
+                    // fim tal que tokens[lo..fim) ainda caiba
                     let low = lo + 1, high = tokens.length, best = lo + 1;
                     while (low <= high) {
                         const mid = (low + high) >> 1;
                         probe.textContent = tokens.slice(lo, mid).join('');
-                        if (probe.scrollHeight <= availablePx) { best = mid; low = mid + 1; }
+                        if (probe.scrollHeight <= availableMidPx) { best = mid; low = mid + 1; }
                         else { high = mid - 1; }
                     }
                     // Recua até a última quebra/espaço para não partir palavras
@@ -1884,6 +1907,8 @@
                                             city={city}
                                             patient={patient}
                                             customDate={customDate}
+                                            ftPartIndex={page.ftPartIndex}
+                                            ftPartTotal={page.ftPartTotal}
                                             forPrint={false}
                                         />
                                     </div>
@@ -1911,6 +1936,8 @@
                                 city={city}
                                 patient={patient}
                                 customDate={customDate}
+                                ftPartIndex={page.ftPartIndex}
+                                ftPartTotal={page.ftPartTotal}
                                 forPrint={true}
                             />
                         ))}
